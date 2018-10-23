@@ -1,0 +1,6 @@
+{
+    "name": "tesi",
+    "sources": ["uart.vhd"],
+    "constraints": ["Nexys-4-DDR-Master.xdc"],
+    "tests": ["uart_tb.vhd"]
+}

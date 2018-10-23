@@ -1,0 +1,6 @@
+*.pdf
+vivado.log
+vivado_*.str
+vcd_autosave.sav
+.Xil
+work-obj08.cf
