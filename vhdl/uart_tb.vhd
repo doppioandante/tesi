@@ -44,8 +44,24 @@ begin
             wait for bit_period;
         end loop;
         TX <= '1'; -- stop bit
+        wait for bit_period;
 
-        wait for 2 * bit_period;
+        wait for 0.7 * bit_period;
+
+        TX <= '0'; -- start bit
+        wait for bit_period;
+        for i in 0 to 3 loop
+            TX <= '1';
+            wait for bit_period;
+        end loop;
+        for i in 0 to 3 loop
+            TX <= '0';
+            wait for bit_period;
+        end loop;
+        TX <= '1'; -- stop bit
+        wait for bit_period;
+
+        wait for bit_period;
 
         std.env.stop;
     end process test_process;
