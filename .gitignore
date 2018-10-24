@@ -2,5 +2,7 @@
 vivado.log
 vivado_*.str
 vcd_autosave.sav
+*.vcd
 .Xil
 work-obj08.cf
+vhdl/Vivado_tesi
