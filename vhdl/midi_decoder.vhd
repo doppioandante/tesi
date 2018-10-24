@@ -10,6 +10,13 @@ package midi is
         data_1: std_logic_vector(6 downto 0);
         data_2: std_logic_vector(6 downto 0);
     end record midi_message;
+
+    constant midi_message_init: midi_message := (
+        msg_type => note_off,
+        channel => 4x"0",
+        data_1 => 7x"0",
+        data_2 => 7x"0"
+    );
 end package midi;
 
 library ieee;
@@ -29,19 +36,12 @@ entity midi_decoder is
     -- high when the fsm has computed the result
     -- that will be present at data_out
     data_available: out std_logic := '0'; -- TODO: find better name
-    data_out: out midi_message
+    data_out: out midi_message := midi_message_init
   );
 end midi_decoder;
 
 architecture behavioural of midi_decoder is
     type state_type is (idle, read_data_1, read_data_2, decoded);
-
-    constant midi_message_init: midi_message := (
-        msg_type => note_off,
-        channel => 4x"0",
-        data_1 => 7x"0",
-        data_2 => 7x"0"
-    );
 
     signal state, next_state: state_type;
     signal midi_msg, next_midi_msg: midi_message := midi_message_init;
@@ -56,13 +56,19 @@ begin
         end if;
     end process sync;
 
+    update_data_out: process(clock, next_state, midi_msg)
+    begin
+        if rising_edge(clock) and next_state = decoded then
+            data_out <= midi_msg;
+        end if;
+    end process update_data_out;
+
     fsm: process (state, midi_msg, read_enable, data_in)
     begin
         next_midi_msg <= midi_msg;
         next_state <= state;
 
         if read_enable then
-
             case state is
                 when idle | decoded =>
                     next_midi_msg <= midi_message_init;
