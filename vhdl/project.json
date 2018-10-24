@@ -1,6 +1,6 @@
 {
     "name": "tesi",
-    "sources": ["uart.vhd"],
+    "sources": ["uart.vhd", "midi_decoder.vhd"],
     "constraints": ["Nexys-4-DDR-Master.xdc"],
-    "tests": ["uart_tb.vhd"]
+    "tests": ["uart_tb.vhd", "midi_decoder_tb.vhd"]
 }
