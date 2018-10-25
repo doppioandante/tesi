@@ -1,0 +1,8 @@
+name = "PWM"
+uuid = "a05d72f2-d3a7-11e8-322f-a34b0c96702c"
+authors = ["Enrico Lumetti <doppioandante@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
+WAV = "8149f6b0-98f6-5db9-b78f-408fbbb8ef88"
