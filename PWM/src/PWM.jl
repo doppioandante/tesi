@@ -31,7 +31,7 @@ function generate_sine_pwm(amplitude, freq, t_max, sine_sampling_frequency, pwm_
     end
 
     ts = 0:1/pwm_sampling_frequency:t_max
-    return 0:1/pwm_sampling_frequency:t_max, output[1:length(ts)]
+    return ts, output[1:length(ts)]
 end
 
 function lowpass_filter(data, freq, sampling_frequency)
