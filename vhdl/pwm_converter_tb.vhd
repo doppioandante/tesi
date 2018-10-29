@@ -12,10 +12,10 @@ architecture testbench of pwm_converter_tb is
     -- such an high sampling rate will allow only 10 datapoints
     -- counter_bits will be 3
     constant sampling_frequency: positive := 10_000_000;
-    constant sample_bits: positive := 3;
+    constant sample_bits: positive := 4;
     signal clock: std_logic;
 
-    signal input_enable: std_logic;
+    signal input_enable: std_logic := '0';
     signal sample: std_logic_vector(sample_bits-1 downto 0);
 
     signal pwm_out: std_logic;
@@ -41,11 +41,11 @@ begin
 
     test_process: process
     begin
+        sample <= 4b"1000"; -- (others => '0');
         input_enable <= '1';
-        sample <= 3b"111"; -- (others => '0');
         wait for clock_period * 50;
         input_enable <= '0';
-        wait for clock_period * 50;
+        wait for clock_period * 200;
 
         stop_write <= true;
     end process test_process;

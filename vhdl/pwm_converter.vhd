@@ -43,7 +43,11 @@ begin
     -- e.g. 10 possible sample values can be represented with 4 bits
     -- but 2**4 >= 10
     assert 2**input_sample_bits <= counter_limit
-        report "Output pwm frequency is not high enough to represent the input"
+        report "PWM output may saturate under some values"
+        severity warning;
+
+    assert input_enable /= '1' or (input_enable = '1' and sample <= counter_limit)
+        report "PWM output saturated: " & integer'image(to_integer(unsigned(sample))) & " > " & positive'image(counter_limit)
         severity error;
 
     process (counter, sample, input_enable)
