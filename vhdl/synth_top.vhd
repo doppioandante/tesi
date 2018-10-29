@@ -14,15 +14,16 @@ entity synth_top is
 end synth_top;
 
 architecture dataflow of synth_top is
-    constant sampling_frequency: positive := 10_000_000;
-    constant sample_bits: positive := 1;
+    constant sampling_frequency: positive := 48_000;
+    constant sample_bits: positive := 11;
 
     constant wave_frequency: positive := 440;
     constant phase_bits: positive := 32;
-    constant step_phase: positive := 18897; --positive(ceil(real(2**phase_bits) * real(wave_frequency)/real(100_000_000)));pro  
+    constant step_phase: positive := 18897; --positive(ceil(real(2**phase_bits) * real(wave_frequency)/real(100_000_000)));
 
     signal sample_ready: std_logic;
     signal sample: std_logic_vector(sample_bits-1 downto 0);
+    signal sample_hold: std_logic_vector(sample_bits-1 downto 0) := (others => '0');
 begin
     AUD_SD <= '1';
 
@@ -48,8 +49,18 @@ begin
     )
     port map (
         clock => CLK100MHZ,
-        input_enable => sample_ready,
-        sample => sample,
+        input_enable => '1',
+        sample => sample_hold,
         pwm_out => AUD_PWM
     );
+
+    -- hold sample received from square wave for the pwm generator
+    holder: process (CLK100MHZ, sample_ready, sample)
+    begin
+        if rising_edge(CLK100MHZ) then
+            if sample_ready = '1' then
+                sample_hold <= sample;
+            end if;
+        end if;
+    end process holder;
 end dataflow;
