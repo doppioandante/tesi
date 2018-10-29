@@ -19,7 +19,16 @@ architecture dataflow of synth_top is
 
     constant wave_frequency: positive := 440;
     constant phase_bits: positive := 32;
-    constant step_phase: positive := 18897; --positive(ceil(real(2**phase_bits) * real(wave_frequency)/real(100_000_000)));
+    package midi_to_phase is new work.midi_to_phase_generic
+    generic map(
+        phase_update_frequency => 100_000_000,
+        phase_bits => phase_bits,
+        rom_filename => "note_phase_table.txt"
+    );
+
+    constant note_number: std_logic_vector(6 downto 0) := 7d"69";
+
+    constant step_phase: midi_to_phase.phase_type := midi_to_phase.midi_note_to_phase_step(note_number);
 
     signal sample_ready: std_logic;
     signal sample: std_logic_vector(sample_bits-1 downto 0);
@@ -37,7 +46,7 @@ begin
     port map (
         clock => CLK100MHZ,
         phase_input_enable => '1',
-        phase_step => to_std_logic_vector(step_phase, phase_bits),
+        phase_step => step_phase,
         output_enable => sample_ready,
         output_sample => sample
     );

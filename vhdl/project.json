@@ -1,8 +1,9 @@
 {
     "name": "tesi",
     "sources": [
-        "uart.vhd",
         "midi.vhd",
+        "midi_to_phase.vhd",
+        "uart.vhd",
         "midi_decoder.vhd",
         "uart_midi_link.vhd",
         "pwm_converter.vhd",
@@ -18,5 +19,8 @@
         "pwm_converter_tb.vhd",
         "square_wave_generator_tb.vhd",
         "square_to_pwm_tb.vhd"
+    ],
+    "other_files": [
+        "note_phase_table.txt"
     ]
 }
