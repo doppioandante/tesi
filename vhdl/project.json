@@ -4,13 +4,15 @@
         "uart.vhd",
         "midi.vhd",
         "midi_decoder.vhd",
-        "uart_midi_link.vhd"
+        "uart_midi_link.vhd",
+        "pwm_converter.vhd"
     ],
     "constraints": ["Nexys-4-DDR-Master.xdc"],
     "tests": [
         "tb_clock_process.vhd",
         "uart_tb.vhd",
         "midi_decoder_tb.vhd",
-        "uart_midi_link_tb.vhd"
+        "uart_midi_link_tb.vhd",
+        "pwm_converter_tb.vhd"
     ]
 }
