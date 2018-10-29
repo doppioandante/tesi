@@ -55,6 +55,7 @@ begin
             end if;
         else
             output_enable <= '0';
+            output_sample <= (others => '0');
         end if;
     end process;
 
