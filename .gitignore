@@ -8,3 +8,6 @@ vcd_autosave.sav
 work-obj08.cf
 vhdl/Vivado_tesi
 vhdl/pwm_out.txt
+vhdl/pwm.svg
+vhdl/*.svg
+vhdl/*.svg

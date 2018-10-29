@@ -16,6 +16,7 @@
         "midi_decoder_tb.vhd",
         "uart_midi_link_tb.vhd",
         "pwm_converter_tb.vhd",
-        "square_wave_generator_tb.vhd"
+        "square_wave_generator_tb.vhd",
+        "square_to_pwm_tb.vhd"
     ]
 }
