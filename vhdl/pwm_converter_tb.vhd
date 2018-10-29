@@ -10,7 +10,6 @@ architecture testbench of pwm_converter_tb is
     constant clock_period: time := 10 ns;
     -- 10 MHz sampling frequency (100ns sampling period)
     -- such an high sampling rate will allow only 10 datapoints
-    -- counter_bits will be 3
     constant sampling_frequency: positive := 10_000_000;
     constant sample_bits: positive := 4;
     signal clock: std_logic;
@@ -41,7 +40,7 @@ begin
 
     test_process: process
     begin
-        sample <= 4b"1010"; -- (others => '0');
+        sample <= 4b"1010";
         input_enable <= '1';
         wait for clock_period * 50;
         input_enable <= '0';
@@ -61,6 +60,7 @@ begin
         -- write out pwm sampling frequency
         write(pwm_line, positive'image(100_000_000), left, 32);
         writeline(output_file, pwm_line);
+        wait until rising_edge(clock);
         while not stop_write loop 
             write(pwm_line, pwm_out, right, 1);
             writeline(output_file, pwm_line);

@@ -84,6 +84,7 @@ begin
         -- write out pwm sampling frequency
         write(pwm_line, positive'image(100_000_000), left, 32);
         writeline(output_file, pwm_line);
+        wait until rising_edge(clock);
         while not stop_write loop 
             write(pwm_line, pwm_out, right, 1);
             writeline(output_file, pwm_line);
