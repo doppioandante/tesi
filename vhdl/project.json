@@ -6,7 +6,8 @@
         "midi_decoder.vhd",
         "uart_midi_link.vhd",
         "pwm_converter.vhd",
-        "square_wave_generator.vhd"
+        "square_wave_generator.vhd",
+        "synth_top.vhd"
     ],
     "constraints": ["Nexys-4-DDR-Master.xdc"],
     "tests": [
