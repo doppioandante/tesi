@@ -5,7 +5,8 @@
         "midi.vhd",
         "midi_decoder.vhd",
         "uart_midi_link.vhd",
-        "pwm_converter.vhd"
+        "pwm_converter.vhd",
+        "square_wave_generator.vhd"
     ],
     "constraints": ["Nexys-4-DDR-Master.xdc"],
     "tests": [
@@ -13,6 +14,7 @@
         "uart_tb.vhd",
         "midi_decoder_tb.vhd",
         "uart_midi_link_tb.vhd",
-        "pwm_converter_tb.vhd"
+        "pwm_converter_tb.vhd",
+        "square_wave_generator_tb.vhd"
     ]
 }
