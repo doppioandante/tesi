@@ -30,7 +30,7 @@ end uart;
 architecture behavioural of uart is
     constant counter_limit: positive := clock_frequency/bit_frequency;
     constant half_counter_limit: positive := counter_limit/2;
-    constant counter_bits: positive := positive(ceil(log2(real(clock_frequency/bit_frequency))));
+    constant counter_bits: positive := positive(ceil(log2(real(counter_limit))));
     constant bit_counter_size: positive := positive(ceil(log2(real(bits_per_symbol))));
 
     -- clock counter
