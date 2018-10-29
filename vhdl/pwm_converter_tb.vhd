@@ -41,11 +41,14 @@ begin
 
     test_process: process
     begin
-        sample <= 4b"1000"; -- (others => '0');
+        sample <= 4b"1010"; -- (others => '0');
         input_enable <= '1';
         wait for clock_period * 50;
         input_enable <= '0';
-        wait for clock_period * 200;
+        wait for clock_period * 50;
+        sample <= 4b"0000";
+        input_enable <= '1';
+        wait for clock_period * 50;
 
         stop_write <= true;
     end process test_process;

@@ -52,7 +52,7 @@ begin
 
     process (counter, sample, input_enable)
     begin
-        if (input_enable = '1' and counter <= sample)
+        if (input_enable = '1' and counter < sample)
             or (input_enable /= '1' and counter <= counter_limit/2) then
             pwm_out <= 'Z';
         else
