@@ -33,6 +33,8 @@ architecture dataflow of synth_top is
     signal sample_ready: std_logic;
     signal sample: std_logic_vector(sample_bits-1 downto 0);
     signal sample_hold: std_logic_vector(sample_bits-1 downto 0) := (others => '0');
+
+    signal sound_enable: std_logic := '0';
 begin
     AUD_SD <= '1';
 
@@ -45,6 +47,7 @@ begin
     )
     port map (
         clock => CLK100MHZ,
+        ce => sound_enable,
         phase_input_enable => '1',
         phase_step => step_phase,
         output_enable => sample_ready,

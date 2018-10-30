@@ -38,6 +38,7 @@ begin
     )
     port map (
         clock => clock,
+        ce => '1',
         phase_input_enable => input_enable,
         phase_step => to_std_logic_vector(step_phase, phase_bits),
         output_enable => open,

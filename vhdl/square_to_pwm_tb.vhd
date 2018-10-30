@@ -47,6 +47,7 @@ begin
     )
     port map (
         clock => clock,
+        ce => '1',
         phase_input_enable => '1',
         phase_step => step_phase,
         output_enable => sample_ready,

@@ -21,6 +21,7 @@ entity square_wave_generator is
     );
     port(
         clock: in std_logic;
+        ce: in std_logic;
 
         phase_input_enable: in std_logic;
         phase_step: in std_logic_vector(phase_bits-1 downto 0);
@@ -61,7 +62,7 @@ begin
 
     process (clock, phase_input_enable, phase_step)
     begin
-        if rising_edge(clock) then
+        if rising_edge(clock) and ce = '1' then
             if phase_input_enable then
                 m_phase_step <= phase_step;
             end if;
@@ -70,7 +71,7 @@ begin
 
     process (clock, counter, phase, phase_step)
     begin
-        if rising_edge(clock) then
+        if rising_edge(clock) and ce = '1' then
             -- TODO...
             phase <= phase + phase_step;
             if counter = counter_limit - 1 then
