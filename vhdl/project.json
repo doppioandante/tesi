@@ -2,10 +2,11 @@
     "name": "tesi",
     "sources": [
         "midi.vhd",
-        "midi_to_phase.vhd",
+        "midi_to_phase_generic.vhd",
         "uart.vhd",
         "midi_decoder.vhd",
         "uart_midi_link.vhd",
+        "sound_scheduler.vhd",
         "pwm_converter.vhd",
         "square_wave_generator.vhd",
         "synth_top.vhd"
@@ -16,6 +17,7 @@
         "uart_tb.vhd",
         "midi_decoder_tb.vhd",
         "uart_midi_link_tb.vhd",
+        "sound_scheduler_tb.vhd",
         "pwm_converter_tb.vhd",
         "square_wave_generator_tb.vhd",
         "square_to_pwm_tb.vhd"
