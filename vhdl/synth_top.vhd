@@ -34,7 +34,7 @@ architecture dataflow of synth_top is
     signal sample: std_logic_vector(sample_bits-1 downto 0);
     signal sample_hold: std_logic_vector(sample_bits-1 downto 0) := (others => '0');
 
-    signal sound_enable: std_logic := '0';
+    signal sound_enable: std_logic := '1';
 begin
     AUD_SD <= '1';
 
