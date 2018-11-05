@@ -8,12 +8,12 @@ entity sound_scheduler is
     );
     port(
         clock: in std_logic;
-        
+
         -- activate for one clock cycle
         -- to read midi_in
         input_enable: in std_logic;
         midi_in: in midi_message;
-        
+
         -- high for one clock cycle to signal
         -- a new output_phase_step
         update_tone_generator: out std_logic := '0';
@@ -31,7 +31,7 @@ architecture behavioural of sound_scheduler is
         phase_bits => phase_bits,
         rom_filename => "note_phase_table.txt"
     );
-    
+
     type state_type is (playing, off);
     signal state, next_state: state_type := off;
     signal current_note_on, next_note_on: std_logic_vector(6 downto 0);
@@ -50,11 +50,11 @@ begin
         next_note_on <= current_note_on;
         update_tone_generator <= '0';
         sound_enable <= '0';
-        
+
         if state = playing then
             sound_enable <= '1';
         end if;
-    
+
         if input_enable = '1' then
             case midi_in.msg_type is
                 when note_on =>
