@@ -60,7 +60,7 @@ begin
         end if;
     end process;
 
-    process (clock, phase_input_enable, phase_step)
+    process (clock, phase_input_enable, phase_step, ce)
     begin
         if rising_edge(clock) and ce = '1' then
             if phase_input_enable then
@@ -69,7 +69,7 @@ begin
         end if;
     end process;
 
-    process (clock, counter, phase, phase_step)
+    process (clock, counter, phase, phase_step, ce)
     begin
         if rising_edge(clock) and ce = '1' then
             -- TODO...
