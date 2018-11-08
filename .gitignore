@@ -11,3 +11,4 @@ vhdl/pwm_out.txt
 vhdl/pwm.svg
 vhdl/*.svg
 vhdl/*.svg
+serial_test/set_baud
