@@ -49,10 +49,12 @@ begin
         next_state <= state;
         next_note_on <= current_note_on;
         update_tone_generator <= '0';
-        sound_enable <= '0';
+        output_phase_step <= (others => '0');
 
         if state = playing then
             sound_enable <= '1';
+        else
+            sound_enable <= '0';
         end if;
 
         if input_enable = '1' then
@@ -61,6 +63,8 @@ begin
                     next_note_on <= midi_in.data_1;
                     output_phase_step <= mtp.midi_note_to_phase_step(midi_in.data_1);
                     update_tone_generator <= '1';
+                    -- TODO: hack, output_phase_step should be sent to a queue/buffer
+                    sound_enable <= '1';
                     next_state <= playing;
 
                 when note_off =>
