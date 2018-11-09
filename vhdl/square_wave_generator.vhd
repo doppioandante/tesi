@@ -62,22 +62,29 @@ begin
 
     process (clock, phase_input_enable, phase_step, ce)
     begin
-        if rising_edge(clock) and ce = '1' then
+        if ce = '1' and rising_edge(clock) then
             if phase_input_enable then
                 m_phase_step <= phase_step;
             end if;
         end if;
     end process;
 
-    process (clock, counter, phase, phase_step, ce)
+    process (clock, counter, phase, m_phase_step, ce)
     begin
-        if rising_edge(clock) and ce = '1' then
-            -- TODO...
-            phase <= phase + phase_step;
-            if counter = counter_limit - 1 then
-                counter <= (others => '0');
-            else
-                counter <= counter + 1;
+        if ce = '1' then
+            if rising_edge(clock) then
+                -- TODO...
+
+                -- NOTE: in case a new m_phase_step was set,
+                -- this update will be delayed by one clock cycle
+                -- Could be corrected by reading phase_step here instead
+                -- when input_enable is '1'
+                phase <= phase + m_phase_step;
+                if counter = counter_limit - 1 then
+                    counter <= (others => '0');
+                else
+                    counter <= counter + 1;
+                end if;
             end if;
         end if;
     end process;

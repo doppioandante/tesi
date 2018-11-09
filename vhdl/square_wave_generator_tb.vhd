@@ -22,6 +22,7 @@ architecture testbench of square_wave_generator_tb is
     signal clock: std_logic;
 
     signal input_enable: std_logic;
+    signal phase_step: std_logic_vector(phase_bits-1 downto 0) := (others => '0');
     signal sample: std_logic_vector(sample_bits-1 downto 0);
 begin
     clock_proc: entity work.tb_clock_process generic map (clock_period)
@@ -40,7 +41,7 @@ begin
         clock => clock,
         ce => '1',
         phase_input_enable => input_enable,
-        phase_step => to_std_logic_vector(step_phase, phase_bits),
+        phase_step => phase_step,
         output_enable => open,
         output_sample => sample
     );
@@ -48,8 +49,10 @@ begin
     test_process: process
     begin
         wait for clock_period;
+        phase_step <= to_std_logic_vector(step_phase, phase_bits);
         input_enable <= '1';
         wait for clock_period;
+        phase_step <= (others => '0');
         input_enable <= '0';
         wait for 4 ms;
 
