@@ -10,6 +10,8 @@ fi
 gcc set_baud.c -o set_baud
 ./set_baud /dev/ttyUSB1 31250
 #stty -a -F /dev/ttyUSB1
-printf "%b" '\x90\x69\x50' > $1
+
+# play A 440Hz for 2 seconds
+printf "%b" '\x90\x45\x50' > $1
 sleep 2
-printf "%b" '\x89\x69\x50' > $1
+printf "%b" '\x89\x45\x50' > $1
