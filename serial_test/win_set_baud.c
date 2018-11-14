@@ -3,21 +3,16 @@
 #include <string.h>
 #include <stdlib.h>
 
-void usage() {
-    fputs("Command line parameters: <serial port name>\n", stderr);
-}
-
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
-    char* token = strtok(szCmdLine, " ");
-    if (token == NULL) {
-        usage();
+    if (szCmdLine[0] == '\0') {
+        fputs("Command line parameters: <serial port name>\n", stderr);
         return 1;
     }
-    const PSTR szPort = strdup(token);
+
     HANDLE hComm;
     hComm = CreateFile(
-        szPort,  
+        szCmdLine,
         GENERIC_READ | GENERIC_WRITE, 
         0, 
         0, 
@@ -28,19 +23,17 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
         puts("Cannot open serial port");
         return 1;
     }
-    free(szPort);
-    
+
     DCB dcb;
     FillMemory(&dcb, sizeof(dcb), 0);
     dcb.DCBlength = sizeof(dcb);
     BuildCommDCB("31250,n,8,1", &dcb);
 
-    if (!SetCommState(hComm, &dcb)) {
+    BOOL res = SetCommState(hComm, &dcb);
+    if (!res) {
         fputs("Error in serial setup\n", stderr);
-        printf("%d\n", dcb.BaudRate);
-        return 1;
     }
 
     CloseHandle(hComm);
-    return 0;
+    return res ? 0 : 1;
 }
