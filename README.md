@@ -16,11 +16,12 @@ Flash the board using the following files found in the `vhdl` folder:
 
 The syntheziser can be operated through the serial usb port.
 Baud rate must be 31250 (like native midi connection), with only one stop bit and no parity bit.
-Testing under linux can be done using the `serial_test/test.sh` script, run under bash.
-Make sure that your user is in the `dialout` group and that `gcc` is installed.
 
+## Testing using the provided MATLAB script
+Run the `serial_test/serial_test.m` script. The `serial_port` variable at the top
+of the script containts the USB serial port name and may have to be modified under your system (e.g. 'COM1' for Windows).
+Under UNIX-like systems, make sure that your user is in the `dialout` group and that `gcc` is installed.
+Compile the `set_baud.c` in the `serial_test` folder before running the matlab script:
 ```bash
-$ bash test.sh /dev/ttyUSB1
+$ gcc set_baud.c -o set_baud
 ```
-
-Note that `/dev/ttyUSB1` may be different on your system.

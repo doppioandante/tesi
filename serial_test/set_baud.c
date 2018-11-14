@@ -12,14 +12,13 @@
 
 int main(int argc, char* argv[]) {
 
-    if (argc != 3) {
-        printf("%s device speed\n\nSet speed for a serial device.\nFor instance:\n    %s /dev/ttyUSB0 75000\n", argv[0], argv[0]);
-        return -1;
+    if (argc != 2) {
+        printf("Usage: %s <serial device>", argv[0]);
+        return 1;
     }
 
     int fd = open(argv[1], O_RDONLY);
-
-    int speed = atoi(argv[2]);
+    int speed = 31250;
 
     struct termios2 tio;
     ioctl(fd, TCGETS2, &tio);
