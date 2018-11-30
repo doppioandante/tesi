@@ -6,6 +6,7 @@ vcd_autosave.sav
 *.ghw
 .Xil
 work-obj08.cf
+vhdl/*.o
 vhdl/Vivado_tesi
 vhdl/pwm_out.txt
 vhdl/pwm.svg

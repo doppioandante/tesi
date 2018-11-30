@@ -1,16 +1,19 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use work.midi.MAX_MIDI_NOTE_NUMBER;
 
-entity sound_scheduler_tb is
-end sound_scheduler_tb;
+entity active_notes_lut_tb is
+end active_notes_lut_tb;
 
-architecture testbench of sound_scheduler_tb is
+architecture testbench of active_notes_lut_tb is
     constant clock_period: time := 10 ns;
     constant phase_bits: positive := 32;
 
     signal clock: std_logic;
     signal input_enable: std_logic;
     signal midi_in: work.midi.midi_message;
+
+    signal active_notes: std_logic_vector(MAX_MIDI_NOTE_NUMBER downto 0);
 begin
     clock_process: entity work.tb_clock_process
     generic map(
@@ -19,8 +22,8 @@ begin
     port map(
         clock => clock
     );
-    
-    uut: entity work.sound_scheduler
+
+    uut: entity work.active_notes_lut
     generic map(
         phase_bits => phase_bits
     )
@@ -28,13 +31,12 @@ begin
         clock => clock,
         midi_in => midi_in,
         input_enable => input_enable,
-        update_tone_generator => open,
-        output_phase_step => open,
-        sound_enable => open
+        o_active_notes_reg => active_notes
     );
-    
+
     test_process: process
     begin
+        wait for clock_period;
         midi_in <= (
             msg_type => work.midi.note_on,
             channel  => 4x"0",
@@ -56,9 +58,9 @@ begin
         input_enable <= '1';
         wait for clock_period;
         input_enable <= '0';
-        
+
         wait for clock_period * 5;
-        
+
         -- now switch off
         midi_in <= (
             msg_type => work.midi.note_off,

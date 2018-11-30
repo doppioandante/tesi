@@ -6,9 +6,9 @@ use std.textio.all;
 
 package midi_to_phase_generic is
     generic (
-        phase_update_frequency: in positive;
-        phase_bits: in positive;
-        rom_filename: in string
+        phase_update_frequency: positive;
+        phase_bits: positive;
+        rom_filename: string
     );
 
     subtype phase_type is std_logic_vector(phase_bits-1 downto 0);

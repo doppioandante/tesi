@@ -16,4 +16,6 @@ package midi is
         data_1 => 7x"0",
         data_2 => 7x"0"
     );
+
+    constant MAX_MIDI_NOTE_NUMBER: positive := 127;
 end package midi;
