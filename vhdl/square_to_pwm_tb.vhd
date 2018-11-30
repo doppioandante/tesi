@@ -22,7 +22,8 @@ architecture testbench of square_to_pwm_tb is
 
     constant note_number: std_logic_vector(6 downto 0) := 7d"105"; -- A 880 Hz
 
-    constant step_phase: midi_to_phase.phase_type := midi_to_phase.midi_note_to_phase_step(note_number);
+    constant step_phase: std_logic_vector(phase_bits-1 downto 0) :=
+        midi_to_phase.midi_note_to_phase_step(note_number);
 
     signal clock: std_logic;
 

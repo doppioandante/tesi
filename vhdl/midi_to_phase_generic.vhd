@@ -11,16 +11,16 @@ package midi_to_phase_generic is
         rom_filename: string
     );
 
-    subtype phase_type is std_logic_vector(phase_bits-1 downto 0);
+    subtype word_type is std_logic_vector(phase_bits-1 downto 0);
 
-    impure function midi_note_to_phase_step(note_number: in std_logic_vector(6 downto 0)) return phase_type;
+    impure function midi_note_to_phase_step(note_number: in std_logic_vector(6 downto 0)) return word_type;
 end package midi_to_phase_generic;
 
 package body midi_to_phase_generic is
     impure function midi_note_to_phase_step(
         note_number: in std_logic_vector(6 downto 0)
-    ) return phase_type is
-        type rom_type is array(0 to 127) of phase_type;
+    ) return word_type is
+        type rom_type is array(0 to 127) of word_type;
 
         impure function init_rom_from_file (filename: in string) return rom_type is
             file rom_file: text;

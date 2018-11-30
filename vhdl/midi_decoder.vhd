@@ -73,7 +73,7 @@ begin
                     case midi_msg.msg_type is
                         when note_on | note_off =>
                             next_state <= read_data_2;
-                        
+
                         -- when only_data1_messages =>
                         --   data_available <= '1';
                         --   next_state <= decoded;

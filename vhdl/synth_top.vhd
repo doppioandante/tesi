@@ -44,7 +44,7 @@ architecture dataflow of synth_top is
 
     signal active_notes: std_logic_vector(MAX_MIDI_NOTE_NUMBER downto 0);
 
-    signal sample_ready_vec: std_logic_vector(active_notes'range) := (others => '0');
+    signal sample_ready_vec: std_logic_vector(active_notes'range) := (others => '1');
     signal sample_vec: std_logic_vector((MAX_MIDI_NOTE_NUMBER+1)*sample_bits-1 downto 0) := (others => '0');
 
     signal compute_mixer_output: std_logic;
@@ -76,8 +76,7 @@ begin
 
     sound_blocks:
     --for i in 0 to MAX_MIDI_NOTE_NUMBER generate
-    for i in 60 to 70 generate
-        -- TODO: report bug when using mtp.phase_type as type
+    for i in 60 to 80 generate
         signal ftw: std_logic_vector(phase_bits-1 downto 0);
     begin
         -- TODO: remove to_std_logic_vector
@@ -99,7 +98,7 @@ begin
         );
     end generate sound_blocks;
 
-    compute_mixer_output <= and_reduce(sample_ready_vec(70 downto 60));
+    compute_mixer_output <= and_reduce(sample_ready_vec);
 
     mixer: entity work.mixer
     generic map (

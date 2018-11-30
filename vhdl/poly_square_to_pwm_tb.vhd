@@ -24,8 +24,8 @@ architecture testbench of poly_square_to_pwm_tb is
     constant note_number_1: std_logic_vector(6 downto 0) := 7d"69"; -- A 440 Hz
     constant note_number_2: std_logic_vector(6 downto 0) := 7d"73"; -- C#
 
-    constant step_phase_1: midi_to_phase.phase_type := midi_to_phase.midi_note_to_phase_step(note_number_1);
-    constant step_phase_2: midi_to_phase.phase_type := midi_to_phase.midi_note_to_phase_step(note_number_2);
+    constant step_phase_1: std_logic_vector(phase_bits-1 downto 0) := midi_to_phase.midi_note_to_phase_step(note_number_1);
+    constant step_phase_2: std_logic_vector(phase_bits-1 downto 0) := midi_to_phase.midi_note_to_phase_step(note_number_2);
 
     signal clock: std_logic;
 
