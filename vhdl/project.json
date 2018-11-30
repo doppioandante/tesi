@@ -6,9 +6,10 @@
         "uart.vhd",
         "midi_decoder.vhd",
         "uart_midi_link.vhd",
-        "sound_scheduler.vhd",
-        "pwm_converter.vhd",
+        "active_notes_lut.vhd",
         "square_wave_generator.vhd",
+        "mixer.vhd",
+        "pwm_converter.vhd",
         "synth_top.vhd"
     ],
     "constraints": ["Nexys-4-DDR-Master.xdc"],
@@ -17,10 +18,12 @@
         "uart_tb.vhd",
         "midi_decoder_tb.vhd",
         "uart_midi_link_tb.vhd",
-        "sound_scheduler_tb.vhd",
-        "pwm_converter_tb.vhd",
+        "active_notes_lut_tb.vhd",
         "square_wave_generator_tb.vhd",
         "square_to_pwm_tb.vhd",
+        "mixer_tb.vhd",
+        "poly_square_to_pwm_tb.vhd",
+        "pwm_converter_tb.vhd",
         "synth_top_tb.vhd"
     ],
     "other_files": [

@@ -1,8 +1,10 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std_unsigned.all;
 use ieee.math_real.log2;
 use ieee.math_real.ceil;
+use work.midi.MAX_MIDI_NOTE_NUMBER;
 
 entity synth_top is
     port(
@@ -17,10 +19,17 @@ end synth_top;
 
 architecture dataflow of synth_top is
     constant sampling_frequency: positive := 48_000;
-    constant sample_bits: positive := 11;
+    constant sample_bits: positive := 4;
 
     constant wave_frequency: positive := 440;
     constant phase_bits: positive := 32;
+
+    package mtp is new work.midi_to_phase_generic
+    generic map(
+        phase_update_frequency => 100_000_000,
+        phase_bits => phase_bits,
+        rom_filename => "note_phase_table.txt"
+    );
 
     signal midi_in: work.midi.midi_message;
     -- high when a new midi message is available
@@ -33,12 +42,13 @@ architecture dataflow of synth_top is
     -- and should be refactored to be used throughout the code
     signal read_midi_in: std_logic;
 
-    signal update_tone_generator: std_logic;
-    signal phase_step: std_logic_vector(phase_bits-1 downto 0);
+    signal active_notes: std_logic_vector(MAX_MIDI_NOTE_NUMBER downto 0);
 
-    signal sample_ready: std_logic;
-    signal sample: std_logic_vector(sample_bits-1 downto 0);
-    signal sample_hold: std_logic_vector(sample_bits-1 downto 0) := (others => '0');
+    signal sample_ready_vec: std_logic_vector(active_notes'range) := (others => '0');
+    signal sample_vec: std_logic_vector((MAX_MIDI_NOTE_NUMBER+1)*sample_bits-1 downto 0) := (others => '0');
+
+    signal compute_mixer_output: std_logic;
+    signal mixer_output: std_logic_vector(sample_bits-1 downto 0);
 
     signal sound_enable: std_logic := '1';
 begin
@@ -53,7 +63,7 @@ begin
         output_message => midi_in
     );
 
-    sound_scheduler: entity work.sound_scheduler
+    active_notes_lut: entity work.active_notes_lut
     generic map(
         phase_bits => phase_bits
     )
@@ -61,25 +71,47 @@ begin
         clock => CLK100MHZ,
         input_enable => read_midi_in,
         midi_in => midi_in,
-        update_tone_generator => update_tone_generator,
-        output_phase_step => phase_step,
-        sound_enable => sound_enable
+        o_active_notes_reg => active_notes
     );
 
-    sqr_generator: entity work.square_wave_generator
+    sound_blocks:
+    --for i in 0 to MAX_MIDI_NOTE_NUMBER generate
+    for i in 60 to 70 generate
+        -- TODO: report bug when using mtp.phase_type as type
+        signal ftw: std_logic_vector(phase_bits-1 downto 0);
+    begin
+        -- TODO: remove to_std_logic_vector
+        ftw <= mtp.midi_note_to_phase_step(to_std_logic_vector(i, 7));
+
+        generator: entity work.square_wave_generator
+        generic map (
+            update_frequency => 100_000_000,
+            output_frequency => sampling_frequency,
+            sample_bits => sample_bits,
+            phase_bits => phase_bits
+        )
+        port map (
+            i_clock => CLK100MHZ,
+            i_rst => compute_mixer_output,
+            i_ftw => ftw,
+            o_sample_ready_reg => sample_ready_vec(i),
+            o_sample_reg => sample_vec((i+1)*sample_bits-1 downto i*sample_bits)
+        );
+    end generate sound_blocks;
+
+    compute_mixer_output <= and_reduce(sample_ready_vec(70 downto 60));
+
+    mixer: entity work.mixer
     generic map (
-        update_frequency => 100_000_000,
-        output_frequency => sampling_frequency,
-        sample_bits => sample_bits,
-        phase_bits => phase_bits
+        sample_bits => sample_bits
     )
     port map (
-        clock => CLK100MHZ,
-        ce => sound_enable,
-        phase_input_enable => update_tone_generator,
-        phase_step => phase_step,
-        output_enable => sample_ready,
-        output_sample => sample
+        i_clock => CLK100MHZ,
+
+        i_active_notes => active_notes,
+        i_samples => sample_vec,
+        i_generate_output_sample => compute_mixer_output,
+        o_sample_reg => mixer_output
     );
 
     pwm_generator: entity work.pwm_converter
@@ -90,7 +122,7 @@ begin
     port map (
         clock => CLK100MHZ,
         input_enable => sound_enable,
-        sample => sample_hold,
+        sample => mixer_output,
         pwm_out => AUD_PWM
     );
 
@@ -107,14 +139,4 @@ begin
             new_midi_available_prev <= new_midi_available;
         end if;
     end process generate_read_midi_in;
-
-    -- hold sample received from square wave for the pwm generator
-    holder: process (CLK100MHZ, sample_ready, sample)
-    begin
-        if rising_edge(CLK100MHZ) then
-            if sample_ready = '1' then
-                sample_hold <= sample;
-            end if;
-        end if;
-    end process holder;
 end dataflow;

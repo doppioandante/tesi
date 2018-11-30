@@ -42,20 +42,22 @@ begin
         end;
     begin
         uart_in <= '1';
-        wait for 1.20 * bit_period;
 
         send_byte(8x"90"); -- note on
         send_byte(8d"69"); -- A 440Hz
         send_byte(8x"50");
 
-        wait for bit_period;
-        wait for 3 ms;
+        send_byte(8x"90"); -- note on
+        send_byte(8d"73");
+        send_byte(8x"50");
 
+        wait for 3 ms;
+ 
         send_byte(8x"80"); -- note off
         send_byte(8d"69"); -- A 440Hz
         send_byte(8x"50");
-
-        wait for 1 ms;
+ 
+        wait for 100 us;
 
         stop_write <= true;
     end process;
