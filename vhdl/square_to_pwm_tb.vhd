@@ -26,9 +26,7 @@ architecture testbench of square_to_pwm_tb is
 
     signal clock: std_logic;
 
-    signal sample_ready: std_logic;
     signal sample: std_logic_vector(sample_bits-1 downto 0);
-    signal sample_hold: std_logic_vector(sample_bits-1 downto 0) := (others => '0');
     signal pwm_out: std_logic;
 
     signal stop_write: boolean := false;
@@ -46,12 +44,11 @@ begin
         phase_bits => phase_bits
     )
     port map (
-        clock => clock,
-        ce => '1',
-        phase_input_enable => '1',
-        phase_step => step_phase,
-        output_enable => sample_ready,
-        output_sample => sample
+        i_clock => clock,
+        i_rst => '0',
+        i_ftw => step_phase,
+        o_sample_ready_reg => open,
+        o_sample_reg => sample
     );
 
     pwm_generator: entity work.pwm_converter
@@ -62,19 +59,9 @@ begin
     port map (
         clock => clock,
         input_enable => '1',
-        sample => sample_hold,
+        sample => sample,
         pwm_out => pwm_out
     );
-
-    -- hold sample received from square wave for the pwm generator
-    holder: process (clock, sample_ready, sample)
-    begin
-        if rising_edge(clock) then
-            if sample_ready = '1' then
-                sample_hold <= sample;
-            end if;
-        end if;
-    end process holder;
 
     test_process: process
     begin

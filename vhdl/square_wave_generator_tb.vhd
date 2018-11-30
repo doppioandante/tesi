@@ -10,19 +10,16 @@ end square_wave_generator_tb;
 
 architecture testbench of square_wave_generator_tb is
     constant clock_period: time := 10 ns;
-    -- 10 MHz sampling frequency (100ns sampling period)
-    -- such an high sampling rate will allow only 10 datapoints
-    constant sampling_frequency: positive := 10_000_000;
+    constant sampling_frequency: positive := 48000;
     constant sample_bits: positive := 1; -- only one needed for a square wave
 
     constant wave_frequency: positive := 440;
     constant phase_bits: positive := 32;
-    constant step_phase: positive := positive(ceil(real(2**phase_bits) * real(wave_frequency)/real(100_000_000)));
+    constant ftw: positive := positive(ceil(real(2**phase_bits) * real(wave_frequency)/real(100_000_000)));
 
     signal clock: std_logic;
 
-    signal input_enable: std_logic;
-    signal phase_step: std_logic_vector(phase_bits-1 downto 0) := (others => '0');
+    signal sample_ready: std_logic;
     signal sample: std_logic_vector(sample_bits-1 downto 0);
 begin
     clock_proc: entity work.tb_clock_process generic map (clock_period)
@@ -38,22 +35,15 @@ begin
         phase_bits => phase_bits
     )
     port map (
-        clock => clock,
-        ce => '1',
-        phase_input_enable => input_enable,
-        phase_step => phase_step,
-        output_enable => open,
-        output_sample => sample
+        i_clock => clock,
+        i_rst => sample_ready,
+        i_ftw => to_std_logic_vector(ftw, phase_bits),
+        o_sample_ready_reg => sample_ready,
+        o_sample_reg => sample
     );
 
     test_process: process
     begin
-        wait for clock_period;
-        phase_step <= to_std_logic_vector(step_phase, phase_bits);
-        input_enable <= '1';
-        wait for clock_period;
-        phase_step <= (others => '0');
-        input_enable <= '0';
         wait for 4 ms;
 
         std.env.stop;
