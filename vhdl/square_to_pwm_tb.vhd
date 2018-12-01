@@ -52,15 +52,15 @@ begin
         o_sample_reg => sample
     );
 
-    pwm_generator: entity work.pwm_converter
+    pwm_generator: entity work.pwm_encoder
     generic map (
         input_sampling_frequency => sampling_frequency,
         input_sample_bits => sample_bits
     )
     port map (
-        clock => clock,
-        sample => sample,
-        pwm_out => pwm_out
+        i_clk => clock,
+        i_sample => sample,
+        o_pwm_signal => pwm_out
     );
 
     test_process: process

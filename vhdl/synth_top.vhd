@@ -109,15 +109,15 @@ begin
         o_sample_reg => mixer_output
     );
 
-    pwm_generator: entity work.pwm_converter
+    pwm_generator: entity work.pwm_encoder
     generic map (
         input_sampling_frequency => sampling_frequency,
         input_sample_bits => sample_bits
     )
     port map (
-        clock => CLK100MHZ,
-        sample => mixer_output,
-        pwm_out => AUD_PWM
+        i_clk => CLK100MHZ,
+        i_sample => mixer_output,
+        o_pwm_signal => AUD_PWM
     );
 
     -- TODO: exactly the same as generate_midi_read_enable process

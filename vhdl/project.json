@@ -1,6 +1,8 @@
 {
     "name": "tesi",
     "sources": [
+        "counter_utils_pkg.vhd",
+        "counter_impulse_generator.vhd",
         "midi.vhd",
         "midi_to_phase_generic.vhd",
         "uart.vhd",
@@ -9,7 +11,7 @@
         "active_notes_lut.vhd",
         "square_wave_generator.vhd",
         "mixer.vhd",
-        "pwm_converter.vhd",
+        "pwm_encoder.vhd",
         "synth_top.vhd"
     ],
     "constraints": ["Nexys-4-DDR-Master.xdc"],
@@ -23,7 +25,7 @@
         "square_to_pwm_tb.vhd",
         "mixer_tb.vhd",
         "poly_square_to_pwm_tb.vhd",
-        "pwm_converter_tb.vhd",
+        "pwm_encoder_tb.vhd",
         "synth_top_tb.vhd"
     ],
     "other_files": [

@@ -3,10 +3,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std_unsigned.all;
 use std.textio.all;
 
-entity pwm_converter_tb is
-end pwm_converter_tb;
+entity pwm_encoder_tb is
+end pwm_encoder_tb;
 
-architecture testbench of pwm_converter_tb is
+architecture testbench of pwm_encoder_tb is
     constant clock_period: time := 10 ns;
     -- 10 MHz sampling frequency (100ns sampling period)
     -- such an high sampling rate will allow only 10 datapoints
@@ -25,15 +25,15 @@ begin
         clock => clock
     );
 
-    uut: entity work.pwm_converter
+    uut: entity work.pwm_encoder
     generic map (
         input_sampling_frequency => sampling_frequency,
         input_sample_bits => sample_bits
     )
     port map (
-        clock => clock,
-        sample => sample,
-        pwm_out => pwm_out
+        i_clk => clock,
+        i_sample => sample,
+        o_pwm_signal => pwm_out
     );
 
     test_process: process
