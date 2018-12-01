@@ -34,10 +34,14 @@ begin
 
     test_process: process
     begin
+        TX <= '1';
+        wait for 1.3 * bit_period;
         send_byte("10101010", TX, bit_period);
         wait for 0.7 * bit_period;
         send_byte("11110000", TX, bit_period);
         wait for bit_period;
+        send_byte(8x"90", TX, bit_period);
+
 
         std.env.stop;
     end process test_process;

@@ -6,6 +6,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std_unsigned.all;
 use ieee.math_real.log2;
 use ieee.math_real.ceil;
+use work.counter_utils.all;
 
 entity uart is
     generic (
@@ -30,87 +31,66 @@ end uart;
 architecture behavioural of uart is
     constant counter_limit: positive := clock_frequency/bit_frequency;
     constant half_counter_limit: positive := counter_limit/2;
-    constant counter_bits: positive := positive(ceil(log2(real(counter_limit))));
-    constant bit_counter_size: positive := positive(ceil(log2(real(bits_per_symbol))));
+    constant counter_bits: positive := get_counter_bits(clock_frequency, bit_frequency);
 
-    -- clock counter
-    signal counter, next_counter: std_logic_vector(counter_bits-1 downto 0) := (others => '0');
-    -- partially read symbol
-    signal symbol, next_symbol: std_logic_vector(bits_per_symbol-1 downto 0) := (others => '0');
-    -- bit counter, up to bits_per_symbol
-    signal bit_counter, next_bit_counter: std_logic_vector(bit_counter_size-1 downto 0) := (others => '0');
+    signal reset_counter: std_logic := '0';
+    signal counter: std_logic_vector(counter_bits-1 downto 0);
+    signal read_serial_input: std_logic := '0';
+    -- shift register containing the decoded input
+    -- one high bit is used as a sentinel and will be present
+    -- at the '0' position when reading has been completed
+    signal symbol: std_logic_vector(bits_per_symbol downto 0) := (others => '0');
 
-    type state_type is (idle, read_first_bit, read_bit, read_stop);
-    signal state, next_state: state_type;
+    type state_type is (idle, read_bit);
+    signal state: state_type;
 begin
-    data_out <= symbol;
+    data_out <= symbol(symbol'high downto 1);
+    data_available <= symbol(0); -- when the sentinel reaches the end, new data is available
+
+    impulse_generator: entity work.counter_impulse_generator
+    generic map(
+        clock_frequency => clock_frequency,
+        impulse_frequency => bit_frequency
+    )
+    port map(
+        i_clk => clock,
+        i_rst => reset_counter,
+        o_counter => counter,
+        o_signal => read_serial_input
+    );
 
     -- TODO: add reset
-    sync_process: process (clock, next_state, next_counter, next_symbol, next_bit_counter)
+    sync_process: process (clock, state, symbol, RX, read_serial_input, counter)
     begin
         if rising_edge(clock) then
-            state <= next_state;
-            counter <= next_counter;
-            symbol <= next_symbol;
-            bit_counter <= next_bit_counter;
+            case state is
+                when idle =>
+                    if counter = counter_limit/2 and RX = '0' then
+                        state <= read_bit;
+                        symbol <= (others => '0');
+                        symbol(bits_per_symbol) <= '1';
+                    end if;
+
+                when read_bit =>
+                    if read_serial_input then
+                        if symbol(0) = '1' then
+                            state <= idle;
+                        else
+                            symbol <= RX & symbol(symbol'left downto 1);
+                        end if;
+                    end if;
+            end case;
         end if;
     end process sync_process;
 
-    fsm_process: process(state, RX, counter, bit_counter, symbol)
+    -- asynchronus output process for resetting the internal counter
+    reset_process: process(state, counter, RX)
     begin
-        data_available <= '0';
-        next_symbol <= symbol;
-        next_bit_counter <= bit_counter;
-
-        case state is
-            when idle =>
-                if counter = half_counter_limit then
-                    if RX = '0' then
-                        next_state <= read_first_bit;
-                    else 
-                        next_state <= idle;
-                    end if;
-                    next_counter <= (others => '0');
-                else
-                    next_state <= idle;
-                    next_counter <= counter + 1;
-                end if;
-
-            when read_first_bit =>
-                if counter = counter_limit then
-                    next_symbol <= RX & symbol(symbol'high downto 1);
-                    next_counter <= (others => '0');
-                    next_state <= read_bit;
-                else
-                    next_counter <= counter + 1;
-                    next_state <= read_first_bit;
-                end if;
-
-            when read_bit =>
-                if counter = counter_limit then
-                    next_symbol <= RX & symbol(symbol'high downto 1);
-                    next_bit_counter <= bit_counter + 1;
-                    next_counter <= (others => '0');
-                else
-                    next_counter <= counter + 1;
-                end if;
-                if bit_counter = bits_per_symbol - 1 then
-                    next_state <= read_stop;
-                    next_bit_counter <= (others => '0');
-                else
-                    next_state <= read_bit;
-                end if;
-
-            when read_stop =>
-                data_available <= '1';
-                if counter = counter_limit then
-                    next_counter <= (others => '0');
-                    next_state <= idle;
-                else
-                    next_counter <= counter + 1;
-                    next_state <= read_stop;
-                end if;
-        end case;
-    end process fsm_process;
+        if state = idle and counter = counter_limit/2 and RX = '0' then
+            reset_counter <= '1';
+        else
+            reset_counter <= '0';
+        end if;
+    end process reset_process;
 
 end behavioural;
