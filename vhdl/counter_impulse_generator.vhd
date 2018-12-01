@@ -27,6 +27,8 @@ end counter_impulse_generator;
 
 architecture behavioural of counter_impulse_generator is
 begin
+    o_signal <= '1' when o_counter = counter_limit-1 else '0';
+
     process (i_clk, o_counter)
     begin
         if rising_edge(i_clk) then
