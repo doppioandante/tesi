@@ -19,9 +19,8 @@ end synth_top;
 
 architecture dataflow of synth_top is
     constant sampling_frequency: positive := 48_000;
-    constant sample_bits: positive := 4;
+    constant sample_bits: positive := 11;
 
-    constant wave_frequency: positive := 440;
     constant phase_bits: positive := 32;
 
     package mtp is new work.midi_to_phase_generic
