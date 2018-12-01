@@ -19,8 +19,9 @@ entity counter_impulse_generator is
     );
     port (
         i_clk: in std_logic;
-        o_signal: out std_logic;
+        i_rst: in std_logic := '0';
 
+        o_signal: out std_logic;
         o_counter: out std_logic_vector(counter_bits-1 downto 0) := (others => '0')
     );
 end counter_impulse_generator;
@@ -32,7 +33,7 @@ begin
     process (i_clk, o_counter)
     begin
         if rising_edge(i_clk) then
-            if o_counter = counter_limit - 1 then
+            if i_rst ='1' or o_counter = counter_limit - 1 then
                 o_counter <= (others => '0');
             else
                 o_counter <= o_counter + 1;
