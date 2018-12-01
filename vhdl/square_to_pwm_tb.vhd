@@ -59,7 +59,6 @@ begin
     )
     port map (
         clock => clock,
-        input_enable => '1',
         sample => sample,
         pwm_out => pwm_out
     );

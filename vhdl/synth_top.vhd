@@ -48,8 +48,6 @@ architecture dataflow of synth_top is
 
     signal compute_mixer_output: std_logic;
     signal mixer_output: std_logic_vector(sample_bits-1 downto 0);
-
-    signal sound_enable: std_logic := '1';
 begin
     AUD_SD <= '1';
 
@@ -74,8 +72,7 @@ begin
     );
 
     sound_blocks:
-    --for i in 0 to MAX_MIDI_NOTE_NUMBER generate
-    for i in 60 to 80 generate
+    for i in 0 to MAX_MIDI_NOTE_NUMBER generate
         signal ftw: std_logic_vector(phase_bits-1 downto 0);
     begin
         -- TODO: remove to_std_logic_vector
@@ -119,7 +116,6 @@ begin
     )
     port map (
         clock => CLK100MHZ,
-        input_enable => sound_enable,
         sample => mixer_output,
         pwm_out => AUD_PWM
     );

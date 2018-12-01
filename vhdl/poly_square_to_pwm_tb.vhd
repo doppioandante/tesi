@@ -103,7 +103,6 @@ begin
     )
     port map (
         clock => clock,
-        input_enable => '1',
         sample => mixed_sample,
         pwm_out => pwm_out
     );

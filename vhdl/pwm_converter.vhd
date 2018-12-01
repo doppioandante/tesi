@@ -1,7 +1,6 @@
 -- pwm converter
 -- converts the input sample to PWM
 -- where logic '1' is attained by driving the output at high impedance
--- when no output is available, outputs a square wave (no sound)
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -20,8 +19,6 @@ entity pwm_converter is
     port (
         clock: in std_logic;
 
-        -- a sample is available
-        input_enable: in std_logic;
         -- input sample to be converted to PWM
         sample: in std_logic_vector(input_sample_bits-1 downto 0);
 
@@ -46,14 +43,13 @@ begin
         report "PWM output may saturate under some values"
         severity warning;
 
-    assert input_enable /= '1' or (input_enable = '1' and sample <= counter_limit)
+    assert sample <= counter_limit
         report "PWM output saturated: " & integer'image(to_integer(unsigned(sample))) & " > " & positive'image(counter_limit)
         severity error;
 
-    process (counter, sample, input_enable)
+    process (counter, sample)
     begin
-        if (input_enable = '1' and counter < sample)
-            or (input_enable /= '1' and counter <= counter_limit/2) then
+        if counter < sample then
             pwm_out <= 'Z';
         else
             pwm_out <= '0';

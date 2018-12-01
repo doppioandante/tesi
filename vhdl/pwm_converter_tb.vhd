@@ -14,7 +14,6 @@ architecture testbench of pwm_converter_tb is
     constant sample_bits: positive := 4;
     signal clock: std_logic;
 
-    signal input_enable: std_logic := '0';
     signal sample: std_logic_vector(sample_bits-1 downto 0);
 
     signal pwm_out: std_logic;
@@ -33,7 +32,6 @@ begin
     )
     port map (
         clock => clock,
-        input_enable => input_enable,
         sample => sample,
         pwm_out => pwm_out
     );
@@ -41,12 +39,10 @@ begin
     test_process: process
     begin
         sample <= 4b"1010";
-        input_enable <= '1';
         wait for clock_period * 50;
-        input_enable <= '0';
+        sample <= 4b"0010";
         wait for clock_period * 50;
         sample <= 4b"0000";
-        input_enable <= '1';
         wait for clock_period * 50;
 
         stop_write <= true;
