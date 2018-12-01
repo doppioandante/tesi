@@ -6,13 +6,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
-use ieee.math_real.log2;
-use ieee.math_real.ceil;
+use work.counter_utils.all;
 
 entity pwm_converter is
     generic (
         clock_frequency: positive := 100_000_000; -- in Hz
-        --output_pulse_frequency: positive := clock_frequency; -- in Hz
         input_sampling_frequency: positive;
         input_sample_bits: positive
     );
@@ -28,11 +26,9 @@ entity pwm_converter is
 end pwm_converter;
 
 architecture behavioural of pwm_converter is
-    -- TODO: account for output_pulse_frequency
     constant counter_limit: positive := clock_frequency/input_sampling_frequency;
-    constant counter_bits: positive := positive(ceil(log2(real(counter_limit))));
-
-    signal counter: std_logic_vector(counter_bits-1 downto 0) := (others => '0');
+    constant counter_bits: positive := get_counter_bits(clock_frequency, input_sampling_frequency);
+    signal counter: std_logic_vector(counter_bits-1 downto 0);
 begin
     -- assert output_pulse_frequency < input_sampling_frequency
 
@@ -47,23 +43,23 @@ begin
         report "PWM output saturated: " & integer'image(to_integer(unsigned(sample))) & " > " & positive'image(counter_limit)
         severity error;
 
+    counter_inst: entity work.counter_impulse_generator
+    generic map(
+        clock_frequency => clock_frequency,
+        impulse_frequency => input_sampling_frequency
+    )
+    port map(
+        i_clk => clock,
+        o_counter => counter,
+        o_signal => open
+    );
+
     process (counter, sample)
     begin
         if counter < sample then
             pwm_out <= 'Z';
         else
             pwm_out <= '0';
-        end if;
-    end process;
-
-    process (clock, counter)
-    begin
-        if rising_edge(clock) then
-            if counter = counter_limit - 1 then
-                counter <= (others => '0');
-            else
-                counter <= counter + 1;
-            end if;
         end if;
     end process;
 end behavioural;
