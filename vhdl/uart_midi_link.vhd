@@ -25,10 +25,10 @@ architecture behavioural of uart_midi_link is
 begin
     uart_inst: entity work.uart
     port map (
-        clock => clock,
-        RX => RX,
-        data_out => decoder_in,
-        data_available => uart_data_available
+        i_clock => clock,
+        i_serial_input => RX,
+        o_data => decoder_in,
+        o_data_available => uart_data_available
     );
 
     decoder_inst: entity work.midi_decoder

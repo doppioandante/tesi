@@ -4,8 +4,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std_unsigned.all;
-use ieee.math_real.log2;
-use ieee.math_real.ceil;
 use work.counter_utils.all;
 
 entity uart is
@@ -15,16 +13,14 @@ entity uart is
         bits_per_symbol: positive := 8
     );
     port (
-        clock: in std_logic;
+        i_clock: in std_logic;
         -- receiving data line
-        RX: in std_logic;
+        i_serial_input: in std_logic;
         -- data out when a symbol is completely received
         -- the first received bit will be the LSB
-        data_out: out std_logic_vector(bits_per_symbol-1 downto 0);
+        o_data: out std_logic_vector(bits_per_symbol-1 downto 0);
         -- signals availability of data_out, either '1' or '0'
-        -- there's no guarantee that data_out will remaing valid
-        -- when data_available goes back to zero
-        data_available: out std_logic
+        o_data_available: out std_logic
     );
 end uart;
 
@@ -42,10 +38,10 @@ architecture behavioural of uart is
     signal symbol: std_logic_vector(bits_per_symbol downto 0) := (others => '0');
 
     type state_type is (idle, read_bit);
-    signal state: state_type;
+    signal state: state_type := idle;
 begin
-    data_out <= symbol(symbol'high downto 1);
-    data_available <= symbol(0); -- when the sentinel reaches the end, new data is available
+    o_data <= symbol(symbol'high downto 1);
+    o_data_available <= symbol(0); -- when the sentinel reaches the end, new data is available
 
     impulse_generator: entity work.counter_impulse_generator
     generic map(
@@ -53,19 +49,19 @@ begin
         impulse_frequency => bit_frequency
     )
     port map(
-        i_clk => clock,
+        i_clk => i_clock,
         i_rst => reset_counter,
         o_counter => counter,
         o_signal => read_serial_input
     );
 
     -- TODO: add reset
-    sync_process: process (clock, state, symbol, RX, read_serial_input, counter)
+    sync_process: process (i_clock, state, symbol, i_serial_input, read_serial_input, counter)
     begin
-        if rising_edge(clock) then
+        if rising_edge(i_clock) then
             case state is
                 when idle =>
-                    if counter = counter_limit/2 and RX = '0' then
+                    if counter = counter_limit/2 and i_serial_input = '0' then
                         state <= read_bit;
                         symbol <= (others => '0');
                         symbol(bits_per_symbol) <= '1';
@@ -76,7 +72,7 @@ begin
                         if symbol(0) = '1' then
                             state <= idle;
                         else
-                            symbol <= RX & symbol(symbol'left downto 1);
+                            symbol <= i_serial_input & symbol(symbol'left downto 1);
                         end if;
                     end if;
             end case;
@@ -84,9 +80,9 @@ begin
     end process sync_process;
 
     -- asynchronus output process for resetting the internal counter
-    reset_process: process(state, counter, RX)
+    reset_process: process(state, counter, i_serial_input)
     begin
-        if state = idle and counter = counter_limit/2 and RX = '0' then
+        if state = idle and counter = counter_limit/2 and i_serial_input = '0' then
             reset_counter <= '1';
         else
             reset_counter <= '0';

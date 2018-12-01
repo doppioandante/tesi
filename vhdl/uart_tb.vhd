@@ -26,10 +26,10 @@ begin
 
     uut: entity work.uart
     port map (
-        clock => clock,
-        RX => TX,
-        data_out => open,
-        data_available => open
+        i_clock => clock,
+        i_serial_input => TX,
+        o_data => open,
+        o_data_available  => open
     );
 
     test_process: process
@@ -41,7 +41,6 @@ begin
         send_byte("11110000", TX, bit_period);
         wait for bit_period;
         send_byte(8x"90", TX, bit_period);
-
 
         std.env.stop;
     end process test_process;
