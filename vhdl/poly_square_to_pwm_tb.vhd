@@ -8,7 +8,7 @@ end poly_square_to_pwm_tb;
 
 architecture testbench of poly_square_to_pwm_tb is
     constant clock_period: time := 10 ns;
-    constant sampling_frequency: positive := 48_000;
+    constant sampling_frequency: positive := 6250000;
     constant sample_bits: positive := 4;
 
     constant wave_frequency: positive := 440;
@@ -85,7 +85,9 @@ begin
 
     mixer: entity work.mixer
     generic map (
-        sample_bits => sample_bits
+        sample_bits => sample_bits,
+        output_bits => sample_bits,
+        number_of_inputs => MAX_MIDI_NOTE_NUMBER+1
     )
     port map (
         i_clock => clock,

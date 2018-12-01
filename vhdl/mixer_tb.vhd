@@ -12,7 +12,7 @@ architecture testbench of mixer_tb is
     signal clock: std_logic;
 
     signal generate_output: std_logic := '0';
-    signal sample: std_logic_vector(sample_bits-1 downto 0);
+    signal sample: std_logic_vector(sample_bits downto 0);
 
     signal input_samples: std_logic_vector(sample_bits*(MAX_MIDI_NOTE_NUMBER+1)-1 downto 0)
         := (others => '0');
@@ -25,7 +25,9 @@ begin
 
     uut: entity work.mixer
     generic map (
-        sample_bits => sample_bits
+        sample_bits => sample_bits,
+        output_bits => sample_bits+1,
+        number_of_inputs => MAX_MIDI_NOTE_NUMBER+1
     )
     port map (
         i_clock => clock,

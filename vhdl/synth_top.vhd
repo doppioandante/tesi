@@ -20,6 +20,7 @@ end synth_top;
 architecture dataflow of synth_top is
     constant sampling_frequency: positive := 48_000;
     constant sample_bits: positive := 11;
+    constant mixer_output_bits: positive := sample_bits + 1;
 
     constant phase_bits: positive := 32;
 
@@ -47,7 +48,7 @@ architecture dataflow of synth_top is
     signal sample_vec: std_logic_vector((MAX_MIDI_NOTE_NUMBER+1)*sample_bits-1 downto 0) := (others => '0');
 
     signal compute_mixer_output: std_logic;
-    signal mixer_output: std_logic_vector(sample_bits-1 downto 0);
+    signal mixer_output_1, mixer_output_2, mixer_output_3, mixer_output: std_logic_vector(mixer_output_bits-1 downto 0);
 begin
     AUD_SD <= '1';
 
@@ -96,18 +97,55 @@ begin
 
     compute_mixer_output <= and_reduce(sample_ready_vec);
 
-    mixer: entity work.mixer
+    -- three parallell mixers
+    -- ranges:
+    --  [0 .. 42] [43 .. 85] [86 .. 127]
+    mixer_1: entity work.mixer
     generic map (
-        sample_bits => sample_bits
+        sample_bits => sample_bits,
+        output_bits => mixer_output_bits,
+        number_of_inputs => 42
     )
     port map (
         i_clock => CLK100MHZ,
 
-        i_active_notes => active_notes,
-        i_samples => sample_vec,
+        i_active_notes => active_notes(127 downto 86),
+        i_samples => sample_vec((127+1)*sample_bits-1 downto 86*sample_bits),
         i_generate_output_sample => compute_mixer_output,
-        o_sample_reg => mixer_output
+        o_sample_reg => mixer_output_1
     );
+
+    mixer_2: entity work.mixer
+    generic map (
+        sample_bits => sample_bits,
+        output_bits => mixer_output_bits,
+        number_of_inputs => 43
+    )
+    port map (
+        i_clock => CLK100MHZ,
+
+        i_active_notes => active_notes(85 downto 43),
+        i_samples => sample_vec((85+1)*sample_bits-1 downto 43*sample_bits),
+        i_generate_output_sample => compute_mixer_output,
+        o_sample_reg => mixer_output_2
+    );
+
+    mixer_3: entity work.mixer
+    generic map (
+        sample_bits => sample_bits,
+        output_bits => mixer_output_bits,
+        number_of_inputs => 43
+    )
+    port map (
+        i_clock => CLK100MHZ,
+
+        i_active_notes => active_notes(42 downto 0),
+        i_samples => sample_vec((42+1)*sample_bits-1 downto 0*sample_bits),
+        i_generate_output_sample => compute_mixer_output,
+        o_sample_reg => mixer_output_3
+    );
+
+    mixer_output <= mixer_output_1 + mixer_output_2 + mixer_output_3;
 
     pwm_generator: entity work.pwm_encoder
     generic map (
@@ -116,7 +154,7 @@ begin
     )
     port map (
         i_clk => CLK100MHZ,
-        i_sample => mixer_output,
+        i_sample => mixer_output(mixer_output_1'high downto 1),
         o_pwm_signal => AUD_PWM
     );
 
