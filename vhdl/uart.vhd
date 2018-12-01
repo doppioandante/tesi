@@ -72,7 +72,7 @@ begin
                         if symbol(0) = '1' then
                             state <= idle;
                         else
-                            symbol <= i_serial_input & symbol(symbol'left downto 1);
+                            symbol <= i_serial_input & symbol(symbol'high downto 1);
                         end if;
                     end if;
             end case;
