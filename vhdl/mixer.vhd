@@ -15,6 +15,7 @@ entity mixer is
         -- i_samples((i+1) * sample_bits-1 downto i*sample_bits) is the i-th sample
         i_samples: in std_logic_vector(sample_bits*(MAX_MIDI_NOTE_NUMBER+1)-1 downto 0);
 
+        -- active for one clock cycle
         i_generate_output_sample: in std_logic;
         o_sample_reg: out std_logic_vector(sample_bits-1 downto 0) := (others => '0')
     );
@@ -24,13 +25,17 @@ architecture behavioural of mixer is
 begin
     process (all) is
         variable sum: std_logic_vector(sample_bits downto 0) := (others => '0');
+        variable sample_value: std_logic_vector(sample_bits downto 0) := (others => '0');
     begin
         if rising_edge(i_clock) and i_generate_output_sample = '1' then
             sum := (others => '0');
             for i in 0 to MAX_MIDI_NOTE_NUMBER loop
                 if i_active_notes(i) then
-                    sum := sum + ('0' & i_samples((i+1)*sample_bits-1 downto i*sample_bits));
+                    sample_value := '0' & i_samples((i+1)*sample_bits-1 downto i*sample_bits);
+                else
+                    sample_value := (others => '0');
                 end if;
+                sum := sum + sample_value;
             end loop;
 
             o_sample_reg <= sum(sample_bits downto 1);
