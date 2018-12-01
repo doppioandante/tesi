@@ -33,7 +33,7 @@ begin
                 end if;
             end loop;
 
-            o_sample_reg <= sum(sample_bits-1 downto 0);
+            o_sample_reg <= sum(sample_bits downto 1);
         end if;
     end process;
 end behavioural;
