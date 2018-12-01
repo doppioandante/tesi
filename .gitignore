@@ -7,9 +7,10 @@ vcd_autosave.sav
 .Xil
 work-obj93.cf
 work-obj08.cf
-vhdl/*.o
+vhdl/**/*.o
 vhdl/Vivado_tesi
 vhdl/post_impl/xilinx-vivado/
+vhdl/post_impl/*.vhd
 vhdl/**/pwm_out.txt
 vhdl/pwm.svg
 vhdl/*.svg
