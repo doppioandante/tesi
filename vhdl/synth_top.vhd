@@ -100,9 +100,9 @@ begin
 
     compute_mixer_output <= and sample_ready_vec;
 
-    -- three parallell mixers
+    -- four parallell mixers
     -- ranges:
-    --  [0 .. 42] [43 .. 85] [86 .. 127]
+    --  [0 .. 31] [32 .. 63] [64 .. 95] [96 .. 127]
     mixer_1: entity work.mixer
     generic map (
         sample_bits => sample_bits,
