@@ -3,14 +3,17 @@
 ## Testing instructions
 Flash the board using the following files found in the `vhdl` folder:
 
+* counter_utils_pkg.vhd
+* counter_impulse_generator.vhd
+* rom_pkg.vhd
 * midi.vhd
-* midi_to_phase_generic.vhd
 * uart.vhd
 * midi_decoder.vhd
 * uart_midi_link.vhd
-* sound_scheduler.vhd
-* pwm_converter.vhd
+* active_notes_lut.vhd
 * square_wave_generator.vhd
+* mixer.vhd
+* pwm_encoder.vhd
 * synth_top.vhd
 * note_phase_table.txt
 
@@ -25,3 +28,7 @@ Compile the `set_baud.c` in the `serial_test` folder before running the matlab s
 ```bash
 $ gcc set_baud.c -o set_baud
 ```
+
+**WARNING**: a weird interaction between `set_baud` and `MATLAB` makes impossible to set the accurate baud rate
+when running the serial test, so the windows program will be called out and `wine` is necessary under linux.
+The binary is provided in the same folder and no compilation is needed.
