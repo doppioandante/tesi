@@ -1,6 +1,5 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_misc.all;
 use ieee.numeric_std_unsigned.all;
 use ieee.math_real.log2;
 use ieee.math_real.ceil;
@@ -95,7 +94,7 @@ begin
         );
     end generate sound_blocks;
 
-    compute_mixer_output <= and_reduce(sample_ready_vec);
+    compute_mixer_output <= and sample_ready_vec;
 
     -- three parallell mixers
     -- ranges:
