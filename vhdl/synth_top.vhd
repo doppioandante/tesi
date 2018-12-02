@@ -19,7 +19,10 @@ end synth_top;
 architecture dataflow of synth_top is
     constant sampling_frequency: positive := 48_000;
     constant sample_bits: positive := 11;
-    constant mixer_output_bits: positive := sample_bits + 1;
+    -- 128 inputs of sample_bits are mixed
+    -- thus the maximum possible value should be stored
+    -- in sample_bits + log2(128) bits, although this is crazy
+    constant mixer_output_bits: positive := sample_bits + 7;
 
     constant phase_bits: positive := 32;
 
@@ -46,8 +49,10 @@ architecture dataflow of synth_top is
     signal sample_ready_vec: std_logic_vector(active_notes'range) := (others => '1');
     signal sample_vec: std_logic_vector((MAX_MIDI_NOTE_NUMBER+1)*sample_bits-1 downto 0) := (others => '0');
 
+    signal total_active_notes: std_logic_vector(6 downto 0); -- max 127
+
     signal compute_mixer_output: std_logic;
-    signal mixer_output_1, mixer_output_2, mixer_output_3, mixer_output: std_logic_vector(mixer_output_bits-1 downto 0);
+    signal mixer_output_1, mixer_output_2, mixer_output_3, mixer_output_4, mixer_output: std_logic_vector(mixer_output_bits-1 downto 0);
 begin
     AUD_SD <= '1';
 
@@ -103,13 +108,13 @@ begin
     generic map (
         sample_bits => sample_bits,
         output_bits => mixer_output_bits,
-        number_of_inputs => 42
+        number_of_inputs => 32
     )
     port map (
         i_clock => CLK100MHZ,
 
-        i_active_notes => active_notes(127 downto 86),
-        i_samples => sample_vec((127+1)*sample_bits-1 downto 86*sample_bits),
+        i_active_notes => active_notes(127 downto 96),
+        i_samples => sample_vec((127+1)*sample_bits-1 downto 96*sample_bits),
         i_generate_output_sample => compute_mixer_output,
         o_sample_reg => mixer_output_1
     );
@@ -118,13 +123,13 @@ begin
     generic map (
         sample_bits => sample_bits,
         output_bits => mixer_output_bits,
-        number_of_inputs => 43
+        number_of_inputs => 32
     )
     port map (
         i_clock => CLK100MHZ,
 
-        i_active_notes => active_notes(85 downto 43),
-        i_samples => sample_vec((85+1)*sample_bits-1 downto 43*sample_bits),
+        i_active_notes => active_notes(95 downto 64),
+        i_samples => sample_vec((95+1)*sample_bits-1 downto 64*sample_bits),
         i_generate_output_sample => compute_mixer_output,
         o_sample_reg => mixer_output_2
     );
@@ -133,18 +138,45 @@ begin
     generic map (
         sample_bits => sample_bits,
         output_bits => mixer_output_bits,
-        number_of_inputs => 43
+        number_of_inputs => 32
     )
     port map (
         i_clock => CLK100MHZ,
 
-        i_active_notes => active_notes(42 downto 0),
-        i_samples => sample_vec((42+1)*sample_bits-1 downto 0*sample_bits),
+        i_active_notes => active_notes(63 downto 32),
+        i_samples => sample_vec((63+1)*sample_bits-1 downto 32*sample_bits),
         i_generate_output_sample => compute_mixer_output,
         o_sample_reg => mixer_output_3
     );
 
-    mixer_output <= mixer_output_1 + mixer_output_2 + mixer_output_3;
+    mixer_4: entity work.mixer
+    generic map (
+        sample_bits => sample_bits,
+        output_bits => mixer_output_bits,
+        number_of_inputs => 32
+    )
+    port map (
+        i_clock => CLK100MHZ,
+
+        i_active_notes => active_notes(31 downto 0),
+        i_samples => sample_vec((31+1)*sample_bits-1 downto 0*sample_bits),
+        i_generate_output_sample => compute_mixer_output,
+        o_sample_reg => mixer_output_4
+    );
+
+    compute_total_active_notes: process (all)
+        variable sum: std_logic_vector(6 downto 0);
+    begin
+        sum := (others => '0');
+        for i in active_notes'range loop
+            if active_notes(i) then
+                sum := sum + 1;
+            end if;
+        end loop;
+        total_active_notes <= sum;
+    end process compute_total_active_notes;
+
+    mixer_output <= (mixer_output_1 + mixer_output_2 + mixer_output_3 + mixer_output_4) / total_active_notes;
 
     pwm_generator: entity work.pwm_encoder
     generic map (
@@ -153,7 +185,7 @@ begin
     )
     port map (
         i_clk => CLK100MHZ,
-        i_sample => mixer_output(mixer_output_1'high downto 1),
+        i_sample => mixer_output(sample_bits-1 downto 0),
         o_pwm_signal => AUD_PWM
     );
 
