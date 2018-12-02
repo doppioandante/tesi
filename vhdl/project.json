@@ -3,8 +3,8 @@
     "sources": [
         "counter_utils_pkg.vhd",
         "counter_impulse_generator.vhd",
+        "rom_pkg.vhd",
         "midi.vhd",
-        "midi_to_phase_generic.vhd",
         "uart.vhd",
         "midi_decoder.vhd",
         "uart_midi_link.vhd",

@@ -26,10 +26,10 @@ architecture dataflow of synth_top is
 
     constant phase_bits: positive := 32;
 
-    package mtp is new work.midi_to_phase_generic
+    package rom is new work.rom
     generic map(
-        phase_update_frequency => 100_000_000,
-        phase_bits => phase_bits,
+        word_bits => phase_bits,
+        address_bits => 7,
         rom_filename => "note_phase_table.txt"
     );
 
@@ -80,8 +80,7 @@ begin
     for i in 0 to MAX_MIDI_NOTE_NUMBER generate
         signal ftw: std_logic_vector(phase_bits-1 downto 0);
     begin
-        -- TODO: remove to_std_logic_vector
-        ftw <= mtp.midi_note_to_phase_step(to_std_logic_vector(i, 7));
+        ftw <= rom.read_at(i);
 
         generator: entity work.square_wave_generator
         generic map (
@@ -173,7 +172,11 @@ begin
                 sum := sum + 1;
             end if;
         end loop;
-        total_active_notes <= sum;
+        if sum = 0 then
+            total_active_notes <= to_std_logic_vector(1, 7);
+        else
+            total_active_notes <= sum;
+        end if;
     end process compute_total_active_notes;
 
     mixer_output <= (mixer_output_1 + mixer_output_2 + mixer_output_3 + mixer_output_4) / total_active_notes;

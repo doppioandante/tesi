@@ -13,17 +13,16 @@ architecture testbench of square_to_pwm_tb is
     constant wave_frequency: positive := 440;
     constant phase_bits: positive := 32;
 
-    package midi_to_phase is new work.midi_to_phase_generic
+    package rom is new work.rom
     generic map(
-        phase_update_frequency => 100_000_000,
-        phase_bits => phase_bits,
+        word_bits => phase_bits,
+        address_bits => 7,
         rom_filename => "note_phase_table.txt"
     );
 
-    constant note_number: std_logic_vector(6 downto 0) := 7d"105"; -- A 880 Hz
+    constant note_number: integer := 105; -- A 880 Hz
 
-    constant step_phase: std_logic_vector(phase_bits-1 downto 0) :=
-        midi_to_phase.midi_note_to_phase_step(note_number);
+    constant step_phase: std_logic_vector(phase_bits-1 downto 0) := rom.read_at(note_number);
 
     signal clock: std_logic;
 
