@@ -1,6 +1,5 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use std.textio.all;
 use work.midi.MAX_MIDI_NOTE_NUMBER;
 
 entity poly_square_to_pwm_tb is
@@ -35,7 +34,9 @@ architecture testbench of poly_square_to_pwm_tb is
     signal input_samples: std_logic_vector((MAX_MIDI_NOTE_NUMBER+1)*sample_bits-1 downto 0) := (others => '0');
     signal generate_output_sample: std_logic := '0';
 
-    signal sample_1, sample_2, mixed_sample: std_logic_vector(sample_bits-1 downto 0);
+    signal sample_1, sample_2: std_logic_vector(sample_bits-1 downto 0);
+    signal mixed_sample: std_logic_vector(sample_bits downto 0) := (others => '0');
+
     signal sample_ready_1, sample_ready_2: std_logic := '0';
     signal rst: std_logic := '0';
     signal pwm_out: std_logic;
@@ -86,7 +87,7 @@ begin
     mixer: entity work.mixer
     generic map (
         sample_bits => sample_bits,
-        output_bits => sample_bits,
+        output_bits => sample_bits+1,
         number_of_inputs => MAX_MIDI_NOTE_NUMBER+1
     )
     port map (
@@ -105,7 +106,7 @@ begin
     )
     port map (
         i_clk => clock,
-        i_sample => mixed_sample,
+        i_sample => mixed_sample(sample_bits downto 1),
         o_pwm_signal => pwm_out
     );
 
@@ -116,22 +117,14 @@ begin
         stop_write <= true;
     end process test_process;
 
-    write_process: process
-        file output_file: text;
-        variable pwm_line: line;
-    begin
-        file_open(output_file, "pwm_out.txt", write_mode);
-        -- write out pwm sampling frequency
-        write(pwm_line, positive'image(100_000_000), left, 32);
-        writeline(output_file, pwm_line);
-        wait until rising_edge(clock);
-        while not stop_write loop 
-            write(pwm_line, pwm_out, right, 1);
-            writeline(output_file, pwm_line);
-            wait for clock_period;
-        end loop;
-
-        file_close(output_file);
-        std.env.stop;
-    end process write_process;
+    logger: entity work.tb_logger
+    generic map(
+        clock_frequency => 100_000_000,
+        filename => "pwm_out.txt"
+    )
+    port map(
+        i_clock => clock,
+        i_pwm => pwm_out,
+        i_stop => stop_write
+    );
 end testbench;

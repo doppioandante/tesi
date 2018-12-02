@@ -1,7 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std_unsigned.all;
-use std.textio.all;
 
 entity pwm_encoder_tb is
 end pwm_encoder_tb;
@@ -48,22 +47,14 @@ begin
         stop_write <= true;
     end process test_process;
 
-    write_process: process
-        file output_file: text;
-        variable pwm_line: line;
-    begin
-        file_open(output_file, "pwm_out.txt", write_mode);
-        -- write out pwm sampling frequency
-        write(pwm_line, positive'image(100_000_000), left, 32);
-        writeline(output_file, pwm_line);
-        wait until rising_edge(clock);
-        while not stop_write loop 
-            write(pwm_line, pwm_out, right, 1);
-            writeline(output_file, pwm_line);
-            wait for clock_period;
-        end loop;
-
-        file_close(output_file);
-        std.env.stop;
-    end process write_process;
+    logger: entity work.tb_logger
+    generic map(
+        clock_frequency => 100_000_000,
+        filename => "pwm_out.txt"
+    )
+    port map(
+        i_clock => clock,
+        i_pwm => pwm_out,
+        i_stop => stop_write
+    );
 end testbench;

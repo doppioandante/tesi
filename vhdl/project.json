@@ -17,6 +17,7 @@
     "constraints": ["Nexys-4-DDR-Master.xdc"],
     "tests": [
         "tb_clock_process.vhd",
+        "tb_logger.vhd",
         "tb_uart_pkg.vhd",
         "uart_tb.vhd",
         "midi_decoder_tb.vhd",
