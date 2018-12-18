@@ -26,7 +26,7 @@
         "square_wave_generator_tb.vhd",
         "square_to_pwm_tb.vhd",
 
-        "mixer.vhd"
+        "mixer.vhd",
         "poly_square_to_pwm_tb.vhd",
 
         "pwm_encoder_tb.vhd",
