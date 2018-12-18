@@ -1,9 +1,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
 use ieee.math_real.log2;
 use ieee.math_real.ceil;
 use work.midi.MAX_MIDI_NOTE_NUMBER;
+use work.counter_utils.all;
 
 entity synth_top is
     port(
@@ -17,6 +19,7 @@ entity synth_top is
 end synth_top;
 
 architecture dataflow of synth_top is
+    constant clock_frequency: positive := 100_000_000;
     constant sampling_frequency: positive := 48_000;
     constant sample_bits: positive := 11;
     -- 128 inputs of sample_bits are mixed
@@ -26,12 +29,19 @@ architecture dataflow of synth_top is
 
     constant phase_bits: positive := 32;
 
-    package rom is new work.rom
+    package phase_rom is new work.rom
     generic map(
         word_bits => phase_bits,
         address_bits => 7,
         rom_filename => "note_phase_table.txt"
     );
+
+    subtype phase_type is std_logic_vector(phase_bits-1 downto 0);
+    type phase_vec_type is array (0 to MAX_MIDI_NOTE_NUMBER) of phase_type;
+
+    constant counter_limit: positive := clock_frequency/sampling_frequency;
+    constant counter_bits: positive := get_counter_bits(clock_frequency, sampling_frequency);
+    signal counter: std_logic_vector(counter_bits-1 downto 0);
 
     signal midi_in: work.midi.midi_message;
     -- high when a new midi message is available
@@ -46,13 +56,14 @@ architecture dataflow of synth_top is
 
     signal active_notes: std_logic_vector(MAX_MIDI_NOTE_NUMBER downto 0);
 
-    signal sample_ready_vec: std_logic_vector(active_notes'range) := (others => '1');
-    signal sample_vec: std_logic_vector((MAX_MIDI_NOTE_NUMBER+1)*sample_bits-1 downto 0) := (others => '0');
+    signal phase_vec: phase_vec_type;
 
-    signal total_active_notes: std_logic_vector(6 downto 0); -- max 127
+    signal scanning_counter: std_logic_vector(6 downto 0) := (others => '0');
+    signal total_active_notes: std_logic_vector(6 downto 0) := (others => '0');
 
-    signal compute_mixer_output: std_logic;
-    signal mixer_output_1, mixer_output_2, mixer_output_3, mixer_output_4, mixer_output: std_logic_vector(mixer_output_bits-1 downto 0);
+    signal update_output: std_logic := '0';
+    signal mixed_output: signed(mixer_output_bits-1 downto 0) := (others => '0');
+    signal pwm_input: std_logic_vector(sample_bits-1 downto 0) := (0 => '0', others => '1');
 begin
     AUD_SD <= '1';
 
@@ -76,110 +87,89 @@ begin
         o_active_notes_reg => active_notes
     );
 
-    sound_blocks:
+    -- instantiate the 128 indipendent NCOs
+    oscillators:
     for i in 0 to MAX_MIDI_NOTE_NUMBER generate
         signal ftw: std_logic_vector(phase_bits-1 downto 0);
     begin
-        ftw <= rom.read_at(i);
+        ftw <= phase_rom.read_at(i);
 
-        generator: entity work.square_wave_generator
+        accumulator: entity work.phase_accumulator
         generic map (
-            update_frequency => 100_000_000,
-            output_frequency => sampling_frequency,
-            sample_bits => sample_bits,
+            clock_frequency => clock_frequency,
             phase_bits => phase_bits
         )
         port map (
             i_clock => CLK100MHZ,
-            i_rst => compute_mixer_output,
+            i_rst_sync => '0',
             i_ftw => ftw,
-            o_sample_ready_reg => sample_ready_vec(i),
-            o_sample_reg => sample_vec((i+1)*sample_bits-1 downto i*sample_bits)
+            o_phase_reg => phase_vec(i)
         );
-    end generate sound_blocks;
+    end generate oscillators;
 
-    compute_mixer_output <= and sample_ready_vec;
-
-    -- four parallell mixers
-    -- ranges:
-    --  [0 .. 31] [32 .. 63] [64 .. 95] [96 .. 127]
-    mixer_1: entity work.mixer
-    generic map (
-        sample_bits => sample_bits,
-        output_bits => mixer_output_bits,
-        number_of_inputs => 32
+    -- this will generate an active high signal each time
+    -- a new sample should be ready for output
+    -- the counter is also exposed
+    counter_inst: entity work.counter_impulse_generator
+    generic map(
+        clock_frequency => clock_frequency,
+        impulse_frequency => sampling_frequency
     )
-    port map (
-        i_clock => CLK100MHZ,
-
-        i_active_notes => active_notes(127 downto 96),
-        i_samples => sample_vec((127+1)*sample_bits-1 downto 96*sample_bits),
-        i_generate_output_sample => compute_mixer_output,
-        o_sample_reg => mixer_output_1
+    port map(
+        i_clk => CLK100MHZ,
+        o_counter => counter,
+        o_signal => update_output
     );
 
-    mixer_2: entity work.mixer
-    generic map (
-        sample_bits => sample_bits,
-        output_bits => mixer_output_bits,
-        number_of_inputs => 32
-    )
-    port map (
-        i_clock => CLK100MHZ,
-
-        i_active_notes => active_notes(95 downto 64),
-        i_samples => sample_vec((95+1)*sample_bits-1 downto 64*sample_bits),
-        i_generate_output_sample => compute_mixer_output,
-        o_sample_reg => mixer_output_2
-    );
-
-    mixer_3: entity work.mixer
-    generic map (
-        sample_bits => sample_bits,
-        output_bits => mixer_output_bits,
-        number_of_inputs => 32
-    )
-    port map (
-        i_clock => CLK100MHZ,
-
-        i_active_notes => active_notes(63 downto 32),
-        i_samples => sample_vec((63+1)*sample_bits-1 downto 32*sample_bits),
-        i_generate_output_sample => compute_mixer_output,
-        o_sample_reg => mixer_output_3
-    );
-
-    mixer_4: entity work.mixer
-    generic map (
-        sample_bits => sample_bits,
-        output_bits => mixer_output_bits,
-        number_of_inputs => 32
-    )
-    port map (
-        i_clock => CLK100MHZ,
-
-        i_active_notes => active_notes(31 downto 0),
-        i_samples => sample_vec((31+1)*sample_bits-1 downto 0*sample_bits),
-        i_generate_output_sample => compute_mixer_output,
-        o_sample_reg => mixer_output_4
-    );
-
-    compute_total_active_notes: process (all)
-        variable sum: std_logic_vector(6 downto 0);
+    -- for each phase accumulator, lookup the corresponding sample
+    -- and add it to the total mix
+    -- also keep count of the number of active notes
+    sampling_process:
+    process (all)
+        variable sample_value: signed(sample_bits-1 downto 0);
     begin
-        sum := (others => '0');
-        for i in active_notes'range loop
-            if active_notes(i) then
-                sum := sum + 1;
-            end if;
-        end loop;
-        if sum = 0 then
-            total_active_notes <= to_std_logic_vector(1, 7);
-        else
-            total_active_notes <= sum;
-        end if;
-    end process compute_total_active_notes;
+        if rising_edge(CLK100MHZ) then
+            if unsigned(counter) >= counter_limit - 2 - MAX_MIDI_NOTE_NUMBER
+               and update_output = '0'
+            then
+                if active_notes(to_integer(scanning_counter)) = '1' then
+                    total_active_notes <= total_active_notes + 1;
+                end if;
 
-    mixer_output <= (mixer_output_1 + mixer_output_2 + mixer_output_3 + mixer_output_4) / total_active_notes;
+                if active_notes(to_integer(scanning_counter)) = '1' then
+                    if phase_vec(to_integer(scanning_counter))(phase_type'high) = '1' then
+                        sample_value := to_signed(2**(sample_bits-1)-1, sample_bits);
+                    else
+                        sample_value := to_signed(-2**(sample_bits-1), sample_bits);
+                    end if;
+                else
+                    sample_value := to_signed(0, sample_bits);
+                end if;
+                mixed_output <= mixed_output + sample_value;
+
+                scanning_counter <= scanning_counter + 1;
+            else
+                scanning_counter <= (others => '0');
+                mixed_output <= (others => '0');
+                total_active_notes <= (others => '0');
+            end if;
+        end if;
+    end process;
+
+    update_output_process:
+    process (all)
+        constant pwm_zero: signed(sample_bits-1 downto 0) := ('1', others => '0');
+        variable scaled_output: signed(mixer_output_bits-1 downto 0);
+    begin
+        if rising_edge(CLK100MHZ) and update_output = '1' then
+            if total_active_notes = 0 then
+                pwm_input <= std_logic_vector(pwm_zero);
+            else
+                scaled_output := mixed_output / signed(resize(unsigned(total_active_notes), 8)) + pwm_zero;
+                pwm_input <= std_logic_vector(scaled_output(sample_bits-1 downto 0));
+            end if;
+        end if;
+    end process update_output_process;
 
     pwm_generator: entity work.pwm_encoder
     generic map (
@@ -188,7 +178,7 @@ begin
     )
     port map (
         i_clk => CLK100MHZ,
-        i_sample => mixer_output(sample_bits-1 downto 0),
+        i_sample => pwm_input,
         o_pwm_signal => AUD_PWM
     );
 

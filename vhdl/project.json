@@ -11,7 +11,6 @@
         "active_notes_lut.vhd",
         "phase_accumulator.vhd",
         "square_wave_generator.vhd",
-        "mixer.vhd",
         "pwm_encoder.vhd",
         "synth_top.vhd"
     ],
@@ -26,8 +25,10 @@
         "active_notes_lut_tb.vhd",
         "square_wave_generator_tb.vhd",
         "square_to_pwm_tb.vhd",
-        "mixer_tb.vhd",
+
+        "mixer.vhd"
         "poly_square_to_pwm_tb.vhd",
+
         "pwm_encoder_tb.vhd",
         "synth_top_tb.vhd"
     ],
