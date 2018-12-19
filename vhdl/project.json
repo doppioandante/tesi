@@ -33,6 +33,7 @@
         "synth_top_tb.vhd"
     ],
     "other_files": [
-        "note_phase_table.txt"
+        "note_phase_table.txt",
+        "waveform_rom.txt"
     ]
 }

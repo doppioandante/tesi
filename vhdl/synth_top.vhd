@@ -28,12 +28,21 @@ architecture dataflow of synth_top is
     constant mixer_output_bits: positive := sample_bits + 7;
 
     constant phase_bits: positive := 32;
+    -- bits used to address the waveform rom
+    constant waveform_address_bits: positive := 13;
 
     package phase_rom is new work.rom
     generic map(
         word_bits => phase_bits,
         address_bits => 7,
         rom_filename => "note_phase_table.txt"
+    );
+
+    package waveform_rom is new work.rom
+    generic map(
+        word_bits => sample_bits,
+        address_bits => waveform_address_bits,
+        rom_filename => "waveform_rom.txt"
     );
 
     subtype phase_type is std_logic_vector(phase_bits-1 downto 0);
@@ -127,21 +136,24 @@ begin
     sampling_process:
     process (all)
         variable sample_value: signed(sample_bits-1 downto 0);
+        variable a: std_logic_vector(sample_bits-1 downto 0);
+        variable note_index: integer;
     begin
         if rising_edge(CLK100MHZ) then
             if unsigned(counter) >= counter_limit - 2 - MAX_MIDI_NOTE_NUMBER
                and update_output = '0'
             then
-                if active_notes(to_integer(scanning_counter)) = '1' then
+                note_index := to_integer(scanning_counter);
+                if active_notes(note_index) = '1' then
                     total_active_notes <= total_active_notes + 1;
                 end if;
 
-                if active_notes(to_integer(scanning_counter)) = '1' then
-                    if phase_vec(to_integer(scanning_counter))(phase_type'high) = '1' then
-                        sample_value := to_signed(2**(sample_bits-1)-1, sample_bits);
-                    else
-                        sample_value := to_signed(-2**(sample_bits-1), sample_bits);
-                    end if;
+                if active_notes(note_index) = '1' then
+                    -- use the upper bits of the phase accumulator to select
+                    -- the corresponding sample in waveform memory
+                    sample_value := signed(waveform_rom.read_at(to_integer(
+                        phase_vec(note_index)(phase_bits-1 downto phase_bits-waveform_address_bits)
+                    )));
                 else
                     sample_value := to_signed(0, sample_bits);
                 end if;
