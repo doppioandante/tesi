@@ -12,6 +12,7 @@
         "phase_accumulator.vhd",
         "square_wave_generator.vhd",
         "pwm_encoder.vhd",
+        "synth_engine.vhd",
         "synth_top.vhd"
     ],
     "constraints": ["Nexys-4-DDR-Master.xdc"],
