@@ -42,8 +42,6 @@ architecture behavioural of synth_engine is
     type phase_vec_type is array (0 to MAX_MIDI_NOTE_NUMBER) of phase_type;
     signal phase_vec: phase_vec_type;
 
-    signal scanning_counter: std_logic_vector(6 downto 0) := (others => '0');
-
     constant counter_limit: positive := clock_frequency/sampling_frequency;
     constant counter_bits: positive := get_counter_bits(clock_frequency, sampling_frequency);
     signal counter: std_logic_vector(counter_bits-1 downto 0);
@@ -87,15 +85,14 @@ begin
     -- and add it to the total mix
     -- also keep count of the number of active notes
     sampling_process:
-    process (i_clock, counter, scanning_counter, i_active_notes, phase_vec, mixed_output)
+    process (i_clock, counter, i_active_notes, phase_vec, mixed_output)
         variable sample_value: signed(sample_bits-1 downto 0);
         variable note_index: integer;
     begin
         if rising_edge(i_clock) then
-            if unsigned(counter) >= counter_limit - 2 - MAX_MIDI_NOTE_NUMBER
-               and o_sample_ready = '0'
+            if unsigned(counter) >= 0 and unsigned(counter) <= MAX_MIDI_NOTE_NUMBER
             then
-                note_index := to_integer(scanning_counter);
+                note_index := to_integer(counter);
 
                 if i_active_notes(note_index) = '1' then
                     -- use the upper bits of the phase accumulator to select
@@ -107,10 +104,7 @@ begin
                     sample_value := to_signed(0, sample_bits);
                 end if;
                 mixed_output <= mixed_output + sample_value;
-
-                scanning_counter <= scanning_counter + 1;
-            else
-                scanning_counter <= (others => '0');
+            elsif o_sample_ready = '1' then
                 mixed_output <= (others => '0');
             end if;
         end if;
