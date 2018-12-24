@@ -4,7 +4,7 @@ address_bits = 13;
 sample_bits = 11;
 
 t = linspace(0, 2*pi, 2^address_bits);
-samples = sin(t);
+samples = 0.4 * sin(t);
 
 % the range [-1,1] is mapped into [-2^(sample_bits-1), 2^(sample_bits-1)-1)
 quantized_values = round(2^(sample_bits-1) .* samples);
