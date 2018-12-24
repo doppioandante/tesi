@@ -31,6 +31,7 @@
         "poly_square_to_pwm_tb.vhd",
 
         "pwm_encoder_tb.vhd",
+        "mono_synth_engine_tb.vhd",
         "synth_top_tb.vhd"
     ],
     "other_files": [
