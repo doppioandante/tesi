@@ -38,6 +38,6 @@ package body rom is
         end function;
      constant rom_array: rom_type := init_rom_from_file(rom_filename);
     begin
-        return rom_array(address);        
+        return rom_array(address);
     end function read_at;
 end package body rom;

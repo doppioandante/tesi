@@ -25,7 +25,7 @@ architecture dataflow of synth_top is
     -- 128 inputs of sample_bits are mixed
     -- thus the maximum possible value should be stored
     -- in sample_bits + log2(128) bits, although this is crazy
-    constant mixer_output_bits: positive := sample_bits + 7;
+    constant mixer_output_bits: positive := sample_bits + 1;
 
     constant phase_bits: positive := 32;
     -- bits used to address the waveform rom
@@ -68,7 +68,6 @@ architecture dataflow of synth_top is
     signal phase_vec: phase_vec_type;
 
     signal scanning_counter: std_logic_vector(6 downto 0) := (others => '0');
-    signal total_active_notes: std_logic_vector(6 downto 0) := (others => '0');
 
     signal update_output: std_logic := '0';
     signal mixed_output: signed(mixer_output_bits-1 downto 0) := (others => '0');
@@ -144,9 +143,6 @@ begin
                and update_output = '0'
             then
                 note_index := to_integer(scanning_counter);
-                if active_notes(note_index) = '1' then
-                    total_active_notes <= total_active_notes + 1;
-                end if;
 
                 if active_notes(note_index) = '1' then
                     -- use the upper bits of the phase accumulator to select
@@ -163,7 +159,6 @@ begin
             else
                 scanning_counter <= (others => '0');
                 mixed_output <= (others => '0');
-                total_active_notes <= (others => '0');
             end if;
         end if;
     end process;
@@ -171,15 +166,9 @@ begin
     update_output_process:
     process (all)
         constant pwm_zero: signed(sample_bits-1 downto 0) := ('1', others => '0');
-        variable scaled_output: signed(mixer_output_bits-1 downto 0);
     begin
         if rising_edge(CLK100MHZ) and update_output = '1' then
-            if total_active_notes = 0 then
-                pwm_input <= std_logic_vector(pwm_zero);
-            else
-                scaled_output := mixed_output / signed(resize(unsigned(total_active_notes), 8)) + pwm_zero;
-                pwm_input <= std_logic_vector(scaled_output(sample_bits-1 downto 0));
-            end if;
+            pwm_input <= std_logic_vector(mixed_output(sample_bits downto 1) + pwm_zero);
         end if;
     end process update_output_process;
 
