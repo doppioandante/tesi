@@ -133,7 +133,7 @@ begin
     -- and add it to the total mix
     -- also keep count of the number of active notes
     sampling_process:
-    process (all)
+    process (CLK100MHZ, counter, scanning_counter, active_notes, phase_vec, mixed_output)
         variable sample_value: signed(sample_bits-1 downto 0);
         variable a: std_logic_vector(sample_bits-1 downto 0);
         variable note_index: integer;
