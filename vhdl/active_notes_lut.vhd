@@ -4,9 +4,6 @@ use ieee.numeric_std_unsigned.all;
 use work.midi.all;
 
 entity active_notes_lut is
-    generic(
-        phase_bits: positive
-    );
     port(
         clock: in std_logic;
 

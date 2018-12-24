@@ -24,9 +24,6 @@ begin
     );
 
     uut: entity work.active_notes_lut
-    generic map(
-        phase_bits => phase_bits
-    )
     port map(
         clock => clock,
         midi_in => midi_in,
