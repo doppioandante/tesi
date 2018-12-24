@@ -25,7 +25,7 @@ architecture testbench of mono_synth_engine_tb is
     signal update_output: std_logic := '0';
     signal sample: signed(sample_bits-1 downto 0) := (others => '0');
 
-    signal pwm_input: std_logic_vector(sample_bits-1 downto 0) := pwm_zero;
+    signal pwm_input: std_logic_vector(sample_bits-1 downto 0) := std_logic_vector(pwm_zero);
     signal pwm_out: std_logic;
 
     signal stop_write: boolean := false;

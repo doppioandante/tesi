@@ -47,9 +47,7 @@ architecture behavioural of synth_engine is
     constant counter_limit: positive := clock_frequency/sampling_frequency;
     constant counter_bits: positive := get_counter_bits(clock_frequency, sampling_frequency);
     signal counter: std_logic_vector(counter_bits-1 downto 0);
-
-    constant mixer_output_bits: positive := sample_bits + 1;
-    signal mixed_output: signed(mixer_output_bits-1 downto 0) := (others => '0');
+    signal mixed_output: signed(sample_bits-1 downto 0) := (others => '0');
 begin
     -- instantiate the 128 indipendent NCOs
     oscillators:
@@ -118,5 +116,5 @@ begin
         end if;
     end process;
 
-    o_sample <= mixed_output(sample_bits downto 1);
+    o_sample <= mixed_output;
 end behavioural;
