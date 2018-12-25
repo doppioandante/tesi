@@ -3,6 +3,9 @@ use ieee.std_logic_1164.all;
 use work.midi.all;
 
 entity uart_midi_link is
+    generic(
+        clock_frequency: positive := 100_000_000
+    );
     port(
         clock: in std_logic;
 
@@ -24,6 +27,9 @@ architecture behavioural of uart_midi_link is
     signal uart_data_available_prev: std_logic := '0';
 begin
     uart_inst: entity work.uart
+    generic map(
+        clock_frequency => clock_frequency
+    )
     port map (
         i_clock => clock,
         i_serial_input => RX,
