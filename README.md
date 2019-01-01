@@ -11,11 +11,12 @@ Flash the board using the following files found in the `vhdl` folder:
 * midi_decoder.vhd
 * uart_midi_link.vhd
 * active_notes_lut.vhd
-* square_wave_generator.vhd
-* mixer.vhd
+* phase_accumulator.vhd
 * pwm_encoder.vhd
+* synth_engine.vhd
 * synth_top.vhd
 * note_phase_table.txt
+* waveform_rom.txt
 
 The syntheziser can be operated through the serial usb port.
 Baud rate must be 31250 (like native midi connection), with only one stop bit and no parity bit.
