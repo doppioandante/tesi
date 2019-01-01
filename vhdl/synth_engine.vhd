@@ -47,7 +47,9 @@ architecture behavioural of synth_engine is
     constant counter_limit: positive := clock_frequency/sampling_frequency;
     constant counter_bits: positive := get_counter_bits(clock_frequency, sampling_frequency);
     signal counter: std_logic_vector(counter_bits-1 downto 0);
+    signal sample_value: signed(sample_bits-1 downto 0) := (others => '0');
     signal mixed_output: signed(sample_bits-1 downto 0) := (others => '0');
+    signal load_sample: boolean := true;
 begin
     -- instantiate the 128 indipendent NCOs
     oscillators:
@@ -87,31 +89,36 @@ begin
     -- and add it to the total mix
     -- also keep count of the number of active notes
     sampling_process:
-    process (i_clock, counter, scanning_counter, i_active_notes, phase_vec, mixed_output)
-        variable sample_value: signed(sample_bits-1 downto 0);
+
+    process (i_clock, counter, scanning_counter, i_active_notes, phase_vec, load_sample, sample_value, mixed_output)
         variable note_index: integer;
     begin
         if rising_edge(i_clock) then
-            if unsigned(counter) >= counter_limit - 2 - MAX_MIDI_NOTE_NUMBER
-               and o_sample_ready = '0'
+            if unsigned(counter) >= counter_limit-1 - 2*(MAX_MIDI_NOTE_NUMBER-1)
+                and o_sample_ready = '0'
             then
-                note_index := to_integer(scanning_counter);
+                if load_sample then
+                    note_index := to_integer(scanning_counter);
 
-                if i_active_notes(note_index) = '1' then
-                    -- use the upper bits of the phase accumulator to select
-                    -- the corresponding sample in waveform memory
-                    sample_value := signed(waveform_rom.read_at(to_integer(
-                        phase_vec(note_index)(phase_bits-1 downto phase_bits-waveform_address_bits)
-                    )));
-                else
-                    sample_value := to_signed(0, sample_bits);
+                    if i_active_notes(note_index) = '1' then
+                        -- use the upper bits of the phase accumulator to select
+                        -- the corresponding sample in waveform memory
+                        sample_value <= signed(waveform_rom.read_at(to_integer(
+                            phase_vec(note_index)(phase_bits-1 downto phase_bits-waveform_address_bits)
+                        )));
+                    else
+                        sample_value <= to_signed(0, sample_bits);
+                    end if;
+                    scanning_counter <= scanning_counter + 1;
+
+                else -- perform the sum
+                    mixed_output <= mixed_output + sample_value;
                 end if;
-                mixed_output <= mixed_output + sample_value;
-
-                scanning_counter <= scanning_counter + 1;
-            else
+                load_sample <= not load_sample;
+            elsif o_sample_ready = '1' then
                 scanning_counter <= (others => '0');
                 mixed_output <= (others => '0');
+                load_sample <= true;
             end if;
         end if;
     end process;
