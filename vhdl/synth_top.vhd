@@ -19,16 +19,13 @@ architecture dataflow of synth_top is
     constant sampling_frequency: positive := 48_000;
     constant sample_bits: positive := 11;
 
+    signal uart_data_available: std_logic := '0';
+    signal uart_data: std_logic_vector(7 downto 0) := (others => '0');
+    signal read_uart_in: std_logic := '0';
+
     signal midi_in: work.midi.midi_message;
-    -- high when a new midi message is available
-    signal new_midi_available: std_logic;
-    -- previous version of the signal, to generate read_midi_in
-    signal new_midi_available_prev: std_logic := '0';
-    -- high for one clock when a new midi message is available
-    -- this will advance the scheduler fsm
-    -- TODO: this is basically a 1-element queue
-    -- and should be refactored to be used throughout the code
-    signal read_midi_in: std_logic;
+    signal midi_msg_available: std_logic := '0';
+    signal read_midi_in: std_logic := '0';
 
     signal active_notes: std_logic_vector(MAX_MIDI_NOTE_NUMBER downto 0);
 
@@ -38,13 +35,38 @@ architecture dataflow of synth_top is
 begin
     AUD_SD <= '1';
 
-    uart_midi_link: entity work.uart_midi_link
-    port map(
-        clock => CLK100MHZ,
-        RX => UART_TXD_IN,
+    uart_inst: entity work.uart
+    generic map(
+        clock_frequency => clock_frequency
+    )
+    port map (
+        i_clock => CLK100MHZ,
+        i_serial_input => UART_TXD_IN,
+        o_data => uart_data,
+        o_data_available => uart_data_available
+    );
 
-        output_enable => new_midi_available,
-        output_message => midi_in
+    uart_to_decoder_semaphore: entity work.low_to_high_detector
+    port map(
+        i_clock => CLK100MHZ,
+        i_signal => uart_data_available,
+        o_detected => read_uart_in
+    );
+
+    decoder_inst: entity work.midi_decoder
+    port map (
+        clock => CLK100MHZ,
+        read_enable => read_uart_in,
+        data_in => uart_data,
+        data_available => midi_msg_available,
+        data_out => midi_in
+    );
+
+    decoder_to_active_notes_semaphore: entity work.low_to_high_detector
+    port map(
+        i_clock => CLK100MHZ,
+        i_signal => midi_msg_available,
+        o_detected => read_midi_in
     );
 
     active_notes_lut: entity work.active_notes_lut
@@ -89,18 +111,4 @@ begin
         i_sample => pwm_input,
         o_pwm_signal => AUD_PWM
     );
-
-    -- TODO: exactly the same as generate_midi_read_enable process
-    -- should be refactored using queues instead
-    generate_read_midi_in: process (CLK100MHZ, new_midi_available, new_midi_available_prev)
-    begin
-        if rising_edge(CLK100MHZ) then
-            if new_midi_available = '1' and new_midi_available_prev = '0' then
-                read_midi_in <= '1';
-            else
-                read_midi_in <= '0';
-            end if;
-            new_midi_available_prev <= new_midi_available;
-        end if;
-    end process generate_read_midi_in;
 end dataflow;
