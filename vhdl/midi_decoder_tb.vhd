@@ -25,11 +25,11 @@ begin
 
     uut: entity midi_decoder
     port map (
-        clock => clock,
-        read_enable => read_enable,
-        data_in => data_in,
-        data_available => open,
-        data_out => open
+        i_clock => clock,
+        i_enable => read_enable,
+        i_data => data_in,
+        o_message_available => open,
+        o_message => open
     );
 
     test_process: process
