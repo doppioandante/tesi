@@ -52,11 +52,22 @@ architecture behavioural of synth_engine is
     signal load_sample: boolean := true;
 begin
     -- instantiate the 128 indipendent NCOs
+    -- and 128 synchronous reset blocks.
+    -- Each reset is triggered for its corresponding NCO
+    -- when a 0 -> 1 transition is met in the LUT
     oscillators:
     for i in 0 to MAX_MIDI_NOTE_NUMBER generate
         signal ftw: std_logic_vector(phase_bits-1 downto 0);
+        signal reset_signal: std_logic := '0';
     begin
         ftw <= phase_rom.read_at(i);
+
+        reset_generator: entity work.low_to_high_detector
+        port map (
+            i_clock => i_clock,
+            i_signal => i_active_notes(i),
+            o_detected => reset_signal
+        );
 
         accumulator: entity work.phase_accumulator
         generic map (
@@ -65,7 +76,7 @@ begin
         )
         port map (
             i_clock => i_clock,
-            i_rst_sync => '0',
+            i_rst_sync => reset_signal,
             i_ftw => ftw,
             o_phase_reg => phase_vec(i)
         );
