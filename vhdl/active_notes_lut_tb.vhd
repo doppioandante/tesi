@@ -25,9 +25,9 @@ begin
 
     uut: entity work.active_notes_lut
     port map(
-        clock => clock,
-        midi_in => midi_in,
-        input_enable => input_enable,
+        i_clock => clock,
+        i_message => midi_in,
+        i_enable => input_enable,
         o_active_notes_reg => active_notes
     );
 

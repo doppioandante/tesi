@@ -55,11 +55,11 @@ begin
 
     decoder_inst: entity work.midi_decoder
     port map (
-        clock => CLK100MHZ,
-        read_enable => read_uart_in,
-        data_in => uart_data,
-        data_available => midi_msg_available,
-        data_out => midi_in
+        i_clock => CLK100MHZ,
+        i_enable => read_uart_in,
+        i_data => uart_data,
+        o_message_available => midi_msg_available,
+        o_message => midi_in
     );
 
     decoder_to_active_notes_semaphore: entity work.low_to_high_detector
@@ -71,9 +71,9 @@ begin
 
     active_notes_lut: entity work.active_notes_lut
     port map(
-        clock => CLK100MHZ,
-        input_enable => read_midi_in,
-        midi_in => midi_in,
+        i_clock => CLK100MHZ,
+        i_enable => read_midi_in,
+        i_message => midi_in,
         o_active_notes_reg => active_notes
     );
 
