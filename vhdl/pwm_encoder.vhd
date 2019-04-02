@@ -29,6 +29,8 @@ architecture behavioural of pwm_encoder is
     constant counter_limit: positive := clock_frequency/input_sampling_frequency;
     constant counter_bits: positive := get_counter_bits(clock_frequency, input_sampling_frequency);
     signal counter: std_logic_vector(counter_bits-1 downto 0);
+
+    signal flip_sign: boolean := false;
 begin
     -- assert output_pulse_frequency < input_sampling_frequency
 
@@ -54,5 +56,16 @@ begin
         o_signal => open
     );
 
-    o_pwm_signal <= 'Z' when counter < i_sample else '0';
+    process (i_clk, flip_sign, counter, i_sample)
+    begin
+        if rising_edge(i_clk) then
+            if flip_sign then
+                o_pwm_signal <= 'Z' when (not counter) < i_sample else '0';
+            else
+                o_pwm_signal <= 'Z' when counter < i_sample else '0';
+            end if;
+            flip_sign <= not flip_sign;
+        end if;
+    end process;
+
 end behavioural;

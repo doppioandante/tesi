@@ -1,15 +1,15 @@
 # Simple syntheziser running on digilent NEXYS4 DDR board
 
 ## Testing instructions
-Flash the board using the following files found in the `vhdl` folder:
+Using Xilinx, Vivado flash the board using the following files found in the `vhdl` folder:
 
 * counter_utils_pkg.vhd
 * counter_impulse_generator.vhd
+* low_to_high_detector.vhd
 * rom_pkg.vhd
 * midi.vhd
 * uart.vhd
 * midi_decoder.vhd
-* uart_midi_link.vhd
 * active_notes_lut.vhd
 * phase_accumulator.vhd
 * pwm_encoder.vhd
@@ -17,6 +17,7 @@ Flash the board using the following files found in the `vhdl` folder:
 * synth_top.vhd
 * note_phase_table.txt
 * waveform_rom.txt
+* Nexys-4-DDR-Master.xdc
 
 The syntheziser can be operated through the serial usb port.
 Baud rate must be 31250 (like native midi connection), with only one stop bit and no parity bit.

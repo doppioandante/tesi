@@ -28,7 +28,7 @@ Z1(2:end-1) = 2*Z1(2:end-1);
 figure;
 fs = pwm_frequency*(0:(L/2))/L;
 subplot(2, 2, 1); 
-%plot(ts, pwm_data);
+plot(ts, pwm_data);
 subplot(2, 2, 2);
 plot(ts, filtered_pwm);
 subplot(2, 2, 3);
