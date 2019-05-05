@@ -1,0 +1,81 @@
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\chapter{Sintesi Digitale Diretta}
+
+La sintesi digitale diretta (Direct Digital Synthesis, Direct Digital Frequency Synthesis, DDS) permette di generare un segnale periodico di frequenza programmabile attraverso un sistema digitale.
+
+In termini formali, si vuole generare un segnale $x(t)$ di periodo $T$, frequenza angolare (?) $2\pi f$ e fase iniziale nulla.
+
+Un sistema di DDS si compone di due blocchi: il \textbf{phase accumulator} (PA), responsabile di generare la fase del segnale a una determinata frequenza, e il \textbf{phase to amplitude convereter} (PAC), che a partire dalla fase ottiene l'ampiezza del segnale.
+
+In un sistema a campioni, il PAC si avvale di una ROM a $2^{k}$ parole contenente il segnale campionato a $m$ bit.
+
+Il \textit{phase accumulator} è un registro a $p$ bit il cui valore rappresenta la frazione del periodo $[0, 2\pi]$ in notazione fixed point. Ad ogni fronte di salita del clock il valore $F$ del registro viene incrementato di un valore pari alla \textit{frequency tuning word}, sempre di $p$ bit, che è in relazione biunivoca con la frequenza $f$ desiderata.
+Il valore della fase si ricava quindi secondo la relazione
+\[
+\phi = \frac{2\pi F}{2^p}
+\]
+
+e la frequency tuning word $M$ relativa a una frequenza $f$ e alla frequenza di clock $f_{clk}$ è
+\[
+M = \floor*{2^p\frac{f_{clk}}{f}}
+\]
+
+Dove $\floor{\cdot}$ indica la parte intera.
+
+La frequenza effettiva $f_{o}$ del segnale risultante è dunque
+\[
+f_{o} = \frac{2^p}{M} f_{clk}
+\]
+in generale diversa dalla $f$ desiderata per via dell'errore di troncamento della fase.
+
+...dire secondo quali condizioni valgono le formule: ad es f minore fclock/2, k < p...
+
+Il PAC genera un nuovo campione alla frequenza di campionamento $f_s$.
+L'udito umano è capace di percepire frequenza fino a circa $\SI{21}{\kilo\hertz}$, per cui è necessaria una frequenza di campionamento di almeno $\SI{42000}{\hertz}$.
+
+Per ricostruire il segnale in uscita il campione viene processato da un convertitore digitale/analogico, e il segnale a tempo continuo risultante viene infine processato da un filtro passa-basso.
+
+\section{Conversione D/A attraverso PWM}
+Per portare il segnale discreto generato attraverso la DDS al dominio analogico si fa uso di una tecnica di modulazione detta \textbf{pulse-width modulation} (PWM).
+
+Per comprendere il funzionamento della PWM si consideri un semplice esempio: si voglia rappresentare un segnale costante $x(t) \equiv x_0$ con $x_0 \in [0, x_{max}]$
+
+Sia quindi $x_{pwm}(t)$ un'onda quadra di ampiezza $x_{max}$, di periodo $T$ e di duty cycle $d=\frac{x0}{x_{max}}$, $d \le 1$:
+\[
+x_{pwm}(t) = \begin{cases}
+	x_{max} & \text{se}\ kT \le t < (k+d)T \\
+	0 & \text{se}\ (k+d)T \le t < (k+1)T
+\end{cases}
+\] 
+con $k \in Z$
+
+È noto che questo segnale è sviluppabile in serie di Fourier come: ...
+
+In particolare, il coefficiente $a_0$ è pari alla media del segnale sul periodo, ossia
+\[
+a_0 = x_{max} \cdot d = x_0
+\]
+
+È possibile quindi ricostruire il segnale $x(t)\equiv x_0$ a partire da $x_{pwm}(t)$ passandolo attraverso un filtro passa-basso che rimuova tutte le armoniche diverse da $a_0$.
+
+Nel caso in esame $x(t)$ non sarà costante, ma sarà variabile e rappresenterà la forma d'onda generata dal sistema di sintesi digitale diretta.
+
+Al segnale costante verrà quindi sostituito il segnale a tempo discreto $x(kT), k \in Z$ generato alla frequenza di campionamento $f_s = \frac{1}{T}$ e con valori $0 \leq x(kT) \leq x_{max}$, e in prima approssimazione il segnale $x_{pwm}$ corrispondente sarà
+\[
+x_{pwm}(t) = \begin{cases}
+	x_{max} & \text{se}\ kT \le t < (k + d_k)T \\
+	0 & \text{se}\ (k+d_k)T \le t < (k+1)T
+\end{cases}
+\]
+dove $(d_k)_{k \in \mathbb{N}}$ è una sequenza di duty cycle non più costanti ma \textbf{modulati} e dati da
+\[
+d_k = \frac{x(kT)}{x_{max}}
+\]
+
+Tuttavia il segnale PWM è generato digitalmente, quindi supponendo per semplicità $T=1/f_s$ multiplo del periodo di clock $1/f_{clk}$, in un singolo periodo
+di campionamento si avrà una successione di $N=\frac{f_{clk}}{f_s}$ impulsi pari a $x_{max}$ (corrispondente ad un valore logico alto) o $0$ (corrispondente a un valore logico basso).
+Poiché al fine della modulazione PWM conta solo il valore medio sul periodo, l'ordine degli impulsi non cambia il risultato, anche se cambia la distribuzione delle armoniche nello spettro del segnale.
+È quindi possibile rappresentare un valore finito di valori in uscita pari a $N$, e quindi i campioni forniti potranno al massimo avere una risoluzione di $\log_2{N}$ bit.
+
+La modulazione PWM non è lineare e introduce quindi distorsione nel segnale ricostruito.

@@ -1,0 +1,24 @@
+\chapter{Descrizione e funzionamento di un sintetizzatore musicale}
+Un sintetizzatore musicale permette la riproduzione di suoni di carattere, intensità e frequenza impostabili dal musicista.
+L'utilizzo dei sintetizzatori come strumento, sia in studio che dal vivo, si afferma negli anni settanta grazie all'invenzione del \textit{Minimoog}, meno costoso e voluminoso dei sintetizzari a muro degli anni sessanta.
+Il \textit{Minimoog} era un sintetizzatore analogico e monofonico, cioè capace di riprodurre solamente una nota alla volta, al contrario dei moderni sintetizzatori detti \textit{polifonici}.
+Al giorno d'oggi i sintetizzatori sono per la maggior parte implementati in maniera digitale, e permettono l'utilizzo di una varietà di tecniche di sintesi (aggiungere)
+In questa tesi ci occuperemo di un semplice sintetizzatore polifonico, capace di riprodurre forme d'onda campionate e controllabile attraverso il protocollo MIDI, ampiamente diffuso nell'industria musicale.
+Il progetto è stato implementato sulla scheda Nexys 4 DDR della Digilent, dotata di una FPGA (aggiungere), di una porta seriale usata per il testing, e di un uscita mini-jack monofonica.
+
+\section{La catena del segnale del sintetizzatore}
+L'input di un sintetizzatore viene dato dal musicista, attraverso uno strumento fisico. Lo strumento invia al sintetizzatore un segnale di controllo che specifica quali note suonare, a che intensità, quali sono i parametri dello strumento ecc. A tale scopo è universalmente impiegato lo standard MIDI, che specifica sia il protocollo di comunicazione che le caratteristiche elettriche della connessione fisica.
+Il sintetizzatore si occuperà di riprodurre i suoni desiderati. Due caratteristiche fondamentali del suono riprodotto sono la sua frequenza e il suo timbro. Per variare queste due componenti sono disponibili una varietà di tecniche.
+In questo progetto ci si avvale della \textit{Direct Digital Frequency Synthesis} per la generazione di una frequenza determinata, mentre si farà uso di una ROM contenente la forma d'onda campionata per ottenere il timbro desiderato.
+La riproduzione di più note contemporanamente si ottiene attraverso una fase di \textit{mixing}, per cui le forme d'onda delle note desiderate vengono sovrapposte.
+Alla fine della catena è presente l'uscita audio, che nel caso della Nexys 4 è un (aggiungere) a cui verrà fornito il segnale opportunamente codificato in pulse-width modulation (?).
+
+(aggiungere figura)
+
+Il tempo che intercorre tra la sollecitazione dello strumento e l'emissione del suono corrispondente viene chiamato ritardo di propagazione o in breve \textit{delay}.
+Il feedback uditivo è essenziale ai fini di una performance musicale, per cui il ritardo introdotto dalla sintetizzatore
+dovrebbe essere il più basso possibile, con un limite indicativo di \SI{5}{\milli\second}.
+Allo stesso tempo, il tempo di ritardo non può essere inferiore al tempo di produzione di un campione (??? va spiegato meglio il funzionamento del sintetizzatore prima di poterne parlare).
+
+
+

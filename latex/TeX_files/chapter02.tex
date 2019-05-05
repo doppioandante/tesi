@@ -1,0 +1,46 @@
+\chapter{Lo standard MIDI}
+
+\section{Il protocollo di comunicazione e i messaggi MIDI}
+Nel protocollo MIDI le informazioni e gli eventi vengono trasmessi sotto forma di \textit{messaggi}.
+Ogni messaggio è composto da una sequenza di byte ordinata, di cui il primo è detto \textit{status byte} e i successivi
+vengono detti \textit{data byte}.
+Il bit più significativo degli status byte è 1, mentre quello dei data byte è 0, per cui ogni data byte permette
+solo valori da 0 a 127. I primi 4 bit dello status byte identificano il tipo di messaggio MIDI, mentre gli ultimi 4 specificano il canale su cui il messaggio ha effetto, per un massimo possibile di 16 canali.
+
+Ai fini del progetto, solamente i messaggi di \textit{note on} e \textit{note off} sul canale '0' verranno gestiti, mentre
+ogni altro tipo di messaggio sarà ignorato.
+Ogni messaggio di note on viene trasmesso nel momento in cui una certa nota deve essere suonata e contiene due data byte: il primo, il note number, identifica la nota da riprodurre, mentre il secondo, detto velocity, fornisce un'informazione
+sull'intensità con cui la nota viene suonata.
+Il messaggio note off è analogo, ma con uno status byte differente.
+
+
+\section{Physical Layer}
+Ogni byte nel protocollo MIDI viene trasmesso in un data frame composto da:
+\begin{itemize}
+	\item \textbf{Start bit}, inizio del byte segnalato dal valore logico basso
+	\item
+	 La sequenza di 8 bit, in ordine dal meno significativo al più significativo
+	\item \textbf{Stop bit}, che indica la fine del byte ed è segnalata dal valore logico alto
+\end{itemize}
+
+(aggiungere baud rate e considerazione su assenza di parity bit)
+In questo aspetto il protocollo MIDI è simile al protocollo seriale RS-232, con la differenza che i valori logici alti sono segnalati dallo scorrere di una corrente di $\SI{5}{\milli\ampere}$ invece che dalla presenza di un voltaggio positivo.
+Il valore logico basso corrisponde all'assenza di corrente.
+
+\section{Il MIDI tuning standard}
+Ad ogni \textit{note number} del protocollo MIDI viene associata una frequenza determinata dal MIDI tuning standard (MTS).
+Si suddivide ogni ottava in 12 note equidistanziate secondo una progressione geometrica, per cui per ogni nota di frequenza $f$ vale
+
+\[
+fs^{12} = 2f 
+\]
+
+Da cui si ricava la ragione $s=2^{\frac{1}{12}}$ della progressione geometrica. Moltiplicando una frequenza per $s$ si ottiene la frequenza della nota successiva.
+Fissando convenzionalmente la frequenza della nota numero 69 a $ \SI{440}{\hertz}$, si ottiene la corrispondenza tra
+il note number $i$ e la frequenza $f$ associata:
+
+\[
+f = \SI{440}{\hertz} \cdot s^{69-i}
+\]
+
+

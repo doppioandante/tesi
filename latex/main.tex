@@ -1,0 +1,46 @@
+% !TeX spellcheck = it_IT
+\documentclass[a4paper,12pt]{book}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage[italian]{babel}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{pgf,tikz}
+\usepackage{hyperref}
+\usepackage{listings}
+\usetikzlibrary{matrix, positioning, arrows.meta}
+\newlength{\myheight}
+\setlength{\myheight}{2.5cm}
+\tikzset{labels/.style={font=\sffamily\scriptsize},
+	circuit/.style={draw,minimum width=2cm,minimum height=\myheight,very thick,inner sep=1mm,outer sep=0pt,cap=round,font=\sffamily\bfseries},
+	triangle 45/.tip={Triangle[angle=45:8pt]}
+}
+
+\begin{document}
+
+\author{Enrico Lumetti}
+\title{Implementazione di un sintetizzatore musicale su scheda Nexys4 DDR}
+%\title{Implementation of a musical synthesizer on the Nexys 4 DDR board}
+%\title{Sintesi audio su scheda FPGA Nexys 4 DDR}
+%\title{Audio Synthesis on the Nexys 4 DDr FPGA board}
+%\title{Implementazione di un sintetizzatore MIDI digitale su scheda FPGA Nexys 4 DDR}
+%\title{Implementation of a MIDI synthesizer on the Nexys 4 DDR FPGA board}
+\date{Febbraio 2019}
+
+\frontmatter
+\maketitle
+\tableofcontents
+
+\mainmatter
+\include{./TeX_files/chapter01}
+\include{./TeX_files/chapter02}
+\include{./TeX_files/chapter03}
+\include{./TeX_files/chapter04}
+\include{./TeX_files/chapter05}
+
+\backmatter
+% bibliography, glossary and index would go here.
+
+\end{document}
