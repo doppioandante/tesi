@@ -34,7 +34,7 @@ architecture behavioural of uart is
     signal read_serial_input: std_logic := '0';
     -- shift register containing the decoded input
     -- one high bit is used as a sentinel and will be present
-    -- at the '0' position when reading has been completed
+    -- at the '0' position when the reading has been completed
     signal symbol: std_logic_vector(bits_per_symbol downto 0) := (others => '0');
 
     type state_type is (idle, read_bit);
@@ -64,12 +64,14 @@ begin
                     if counter = counter_limit/2 and i_serial_input = '0' then
                         state <= read_bit;
                         symbol <= (others => '0');
+                        -- set the sentinel bit
                         symbol(bits_per_symbol) <= '1';
                     end if;
 
                 when read_bit =>
                     if read_serial_input then
                         if symbol(0) = '1' then
+                            -- in this case i_serial_input = 0 because a stop bit is being received
                             state <= idle;
                         else
                             symbol <= i_serial_input & symbol(symbol'high downto 1);
@@ -80,6 +82,13 @@ begin
     end process sync_process;
 
     -- asynchronus output process for resetting the internal counter
+    -- this is needed because the frequency at which the start bit is detected
+    -- is not the same at which every bit is read later (it is actually the double).
+    -- reset_counter is set to 1 when a start bit is detected, to restart the counter,
+    -- so that the next sample is taken exactly after a sample period after the
+    -- start bit has been received.
+    -- This would be useless in case the code is simplified to detect the start bit_period
+    -- at the same frequency of the read_bit case
     reset_process: process(state, counter, i_serial_input)
     begin
         if state = idle and counter = counter_limit/2 and i_serial_input = '0' then
