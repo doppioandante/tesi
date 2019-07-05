@@ -1,0 +1,103 @@
+\chapter{Dispositivi Hardware della scheda Nexys4 DDR}
+
+L'hardware utilizzato per il progetto consiste in una scheda Nexys4 DDR.
+
+Il nucleo della scheda è costituito da un FPGA Xilinx Artix 7 XC7A100T.
+Attorno ad esso sono collegati vari connettori, sensori e pulsanti.
+
+Per la realizzazione del sintetizzatore si farà uso dei seguenti componenti:
+\begin{itemize}
+    \item \textbf{Bridge USB-UART} Il bridge USB<->UART permette la lettura
+          dei messaggi MIDI, inviati dal computer attraverso la porta seriale
+    \item \textbf{Mono Audio Output} Un connettore audio monofonico di tipo ??? 
+          viene usato per emettere il suono.
+\end{itemize}
+
+L'output fornito dal jack audio viene generato attraverso un convertitore analogico/digitale,
+costituito da un filtro passa-basso a cui viene fornito in ingresso il segnale
+da generare in codifica PWM.
+
+Il filtro passabasso è un filtro di Butterworth del quarto ordine, (Sallen-Key?)
+Descrizione di almeno la risposta in frequenza
+
+
+\section{FPGA}
+\subsection{Struttura di un FPGA}
+Un Field-programmable Gate Array (FPGA) è un circuito digitale integrato
+avente una struttura regolare, e contente:
+\begin{itemize}
+    \item \textbf{configurable logic blocks}: in breve \textbf{CLB}, blocchi
+            logici configurabili che permettono di realizzare funzioni
+            logiche arbitrarie
+    \item \textbf{configurable routing}: i blocchi logici sono connessi
+          attraverso delle connessioni a loro volta configurabili,
+          rendendo possibile creare funzioni logiche a un maggior numero
+          di ingressi e più complesse
+\end{itemize}
+
+Oltre a queste due componenti fondamentali, un FPGA contiente altri
+componenti necessari al suo funzionamento e interfacciamento con
+circuiti esterni, tra cui:
+
+\begin{itemize}
+    \item \textbf{I/O blocks}: blocchi di input e output,
+           permettono al FPGA di interfacciarsi con l'esterno
+    \item \textbf{Dedicated blocks}: per rendere più efficiente
+           l'implementazione di operazioni comuni, esistono vari blocchi
+           non configurabili che eseguono funzioni specifiche
+    \item \textbf{Memory blocks}: è possibile trovare anche blocchi di
+           memoria all'interno di un FPGA
+    \item \textbf{Clock Management Tiles e Clock Routing}: circuiteria necessaria per 
+           la gestione e propagazione del segnale di clock
+\end{itemize}
+
+Il FPGA utilizzato dalla scheda Nexys 4 DDR è uno Xilinx Artix 7 XC7A100T.
+Esso contiene 15850 logic slices (ognuno di essi composto da più
+configurable logic blocks) e sei clock management tiles (CMT) con
+phase-locked loop.
+Inoltre, di importanza per il progetto trattato, sono i 240 DSP slices, 
+componenti dedicati (semi-configurabili?) che rendono più efficiente
+l'implementazione dei sommatori e i 4860 Kbits di Block Ram (BRAM),
+che verranno impiegati in fase di sintesi per memorizzare sia la forma
+d'onda campionata che le frequency tuning words impiegate nella digital
+direct synthesis.
+
+\subsection{Struttura di un CLB}
+
+\section{Programmazione di un FPGA}
+La programmazione di un FPGA avviene a livello fisico attraverso
+la scrittura di una SRAM che indica come vanno configurati i blocchi
+logici e le interconnessioni presenti nell'IC.
+
+A livello di sviluppo si utilizzano linguaggi di descrizione dell'hardware
+(HDL) come VHDL e Verilog, che nascondono in gran parte la complessità
+dell'FPGA.
+
+Il codice sorgente viene processato da un programma di sintesi che compie
+all'incirca le seguenti operazioni:
+
+\begin{itemize}
+    \item \textbf{Creazione del netlist}: il codice viene convertito in una
+          netlist composta da componenti ad alto livello (come sommatori,
+          multiplexer, registri ecc..) che tuttavia è ancora non combacia
+          con alla struttura fisica del FPGA
+    \item \textbf{Place and Route}: la netlist viene mappata fisicamente sui
+          componenti del FPGA
+    \item \textbf{Bitstream Generation}: Il risultato del Place and Route viene
+          convertito in una serie di bit che vengono poi scritti sulla SRAM
+          del FPGA in fase di programmazione
+\end{itemize}
+
+In fase di progetto e di sviluppo il design può essere simulato e analizzato
+ben prima di passare alla programmazione della scheda.
+Un passo particolarmente importante è l'analisi dei tempi di propagazione:
+successivamente al place and route è possibile calcolare il tempo di propagazione
+del segnale attraverso la logica implementata. Nel caso in cui siano presenti
+delle route con un tempo di propagazione troppo lungo, sarà necessario
+intervenire a livello del design o addirittura manualmente nel posizionamento
+dei blocchi sulla FPGA.
+
+Come verrà descritto più avanti, per questo progetto è stato necessario
+modificare l'implementazione del sintetizzatore più volte per garantire il
+soddisfacimento dei vincoli temporali, resa difficoltosa dal grande numero
+di route necessarie alla polifonia (??? o era per via della memoria dei campioni?)
