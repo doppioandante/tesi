@@ -1,0 +1,47 @@
+\chapter{Conclusione e possibili sviluppi}
+
+Il sintetizzatore progettato sebbene funzionante presenta performance
+di SNR non ottimali, dovute alle limitazioni intriseche della pulse-width 
+modulation.
+Sarebbe possibile bypassare l'uscita audio monofonica della scheda
+e utilizzare un device esterno, connesso attraverso le porte PMOD, 
+per fornire una qualità audio migliore.
+Due esempi sono i componenti PMOD I2S2 e il PMOD AMP2 della Digilent.
+
+La polifonia, essendo implementata con un semplice sommatore in fase 
+di mixing, è soggetta ad overflow quando la somma dei campioni supera
+la precisione permessa dai \code{b} bits di quantizzazione.
+In campo audio questo fenomento viene detto \textit{clipping}.
+Di fatto, essendo l'ampiezza del segnale campionato pari a poco meno
+della metà del valore massimo rappresentabile, la polifonia è limitata
+a due voci, oltre le quali il segnale presenta una degradazione
+notevole.
+
+Far rientrare il range del segnale nei limiti con un divisore risolverebbe
+il clipping ma degraderebbe la qualità del segnale e causerebbe
+sbalzi di volume udibili nel passaggio da una singola nota  a più note
+suonate contemporaneamente.
+
+Tecniche più avanzate di compressione dinamica del segnale 
+sono molto complesse e al di fuori dello scopo di questa tesi.  
+
+I messaggi MIDI contengono anche l'informazione riguardante alla forza
+di pressione della nota, detta velocity, come descritto nel \cref{chap:midi}
+Si potrebbe estendere il sintetizzatore per rispettare questa informazione
+in due modi differenti:
+\begin{itemize}
+  \item Si stabiliscono dei range di velocity meno granulari  e per ognuno
+        di questi si accede a una rom diversa creata impostando una diversa 
+        ampiezza alla forma d'onda
+  \item Si stabiliscono sempre dei range di velocity, ma lo scaling dei
+        campione avviene con un divisore
+\end{itemize}
+Il primo metodo produrrebbe risultati più precisi numericamente ma al
+prezzo di una notevole quantità di memoria in più, mentre il secondo
+otterrebbe una qualità peggiore ma con un'occupazione minore delle
+risorse del FPGA.
+
+Per mancanza di tempo il sintetizzatore è stato operato attraverso un 
+computer per il testing, ma sarebbe possibile connettere la scheda
+direttamente utilizzando una porta PMOD generica e un circuito esterno
+(anche su breadboard) a cui connettere il jack MIDI.

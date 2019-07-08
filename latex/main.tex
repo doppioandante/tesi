@@ -1,15 +1,17 @@
 % !TeX spellcheck = it_IT
-\documentclass[a4paper,12pt]{book}
+\documentclass[italian,a4paper,12pt]{book}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{siunitx}
-\usepackage[italian]{babel}
+\usepackage{babel}
 \usepackage{mathtools}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{pgf,tikz}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{tabu}
+\usepackage{cleveref}
 \usetikzlibrary{matrix, positioning, arrows.meta}
 \newlength{\myheight}
 \setlength{\myheight}{2.5cm}
@@ -17,6 +19,18 @@
 	circuit/.style={draw,minimum width=2cm,minimum height=\myheight,very thick,inner sep=1mm,outer sep=0pt,cap=round,font=\sffamily\bfseries},
 	triangle 45/.tip={Triangle[angle=45:8pt]}
 }
+
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Implementazione di un sintetizzatore musicale su scheda Nexys4 DDR},
+    bookmarks=true,
+}
+
+\newcommand{\code}[1]{\texttt{#1}} 
 
 \begin{document}
 
@@ -27,7 +41,7 @@
 %\title{Audio Synthesis on the Nexys 4 DDr FPGA board}
 %\title{Implementazione di un sintetizzatore MIDI digitale su scheda FPGA Nexys 4 DDR}
 %\title{Implementation of a MIDI synthesizer on the Nexys 4 DDR FPGA board}
-\date{Febbraio 2019}
+\date{15 Luglio 2019}
 
 \frontmatter
 \maketitle
@@ -40,6 +54,8 @@
 \include{./TeX_files/chapter_dds_pwm}
 \include{./TeX_files/chapter_architecture}
 \include{./TeX_files/chapter_analisi}
+\include{./TeX_files/chapter_conclusione}
+\include{./TeX_files/bibliography}
 
 \backmatter
 % bibliography, glossary and index would go here.

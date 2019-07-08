@@ -8,30 +8,45 @@ parlare di teorema di campionamento Nyquist?
 \section{Sintesi digital diretta}
 La sintesi digitale diretta (Direct Digital Synthesis, Direct Digital Frequency Synthesis, DDS) permette di generare un segnale periodico di frequenza programmabile attraverso un sistema digitale.
 
-In termini formali, si vuole generare un segnale periodico di periodo ??? di frequenza angolare (?) $2\pi f$, ampiezza tra -1 e 1??? fase iniziale nulla.
+In termini formali, si vuole generare un segnale $x(t)$ periodico di periodo ??? di frequenza angolare (?) $2\pi f$, ampiezza tra -1 e 1??? fase iniziale nulla.
 ..dire come si riconduce un segnale di periodo $T$ generico a un segnale
 periodico di periodo $2\pi f$ 
 Un sistema di DDS si compone di due blocchi: il \textbf{phase accumulator} (PA), responsabile di generare la fase del segnale a una determinata frequenza, e il \textbf{phase to amplitude convereter} (PAC), che a partire dalla fase ottiene l'ampiezza del segnale.
 
-In un sistema a campioni, il PAC si avvale di una ROM a $2^{k}$ parole contenente il segnale campionato a $m$ bit.
+In un sistema a campioni, il PAC si avvale di una ROM di $2^{\code{M}}$ parole contenente il segnale campionato a \code{b} bit.
+Altre tecniche possibili per generare i campioni sono algoritmiche (ad esempio l'algoritmo CORDIC per generare segnali sinusoidali) [TODO]
 
-Il \textit{phase accumulator} è un registro a $p$ bit il cui valore rappresenta la frazione del periodo $[0, 2\pi]$ in notazione fixed point. Ad ogni fronte di salita del clock il valore $F$ del registro viene incrementato di un valore pari alla \textit{frequency tuning word}, sempre di $p$ bit, che è in relazione biunivoca con la frequenza $f$ desiderata.
-Il valore della fase si ricava quindi secondo la relazione
+Il \textit{phase accumulator} è un registro a $\code{N}$ bit il cui valore rappresenta la frazione del periodo $[0, 2\pi]$ in notazione
+fixed point. Ad ogni fronte di salita del clock il valore $\code{F}$ del registro viene incrementato di un valore pari alla \textit{frequency tuning word},
+sempre di $\code{N}$ bit, che è in relazione biunivoca con la frequenza $f$ desiderata.
+
+Si ricorda che la fase del segnale $x(t)$ al tempo $t$ è definita come
 \[
-\phi = \frac{2\pi F}{2^p}
+\phi(t) = 2\pi f t
 \]
 
-e la frequency tuning word $M$ relativa a una frequenza $f$ e alla frequenza di clock $f_{clk}$ è
-come si ottiene??
+Nella sintesi digitale, la fase al tempo $t$ si ottiene dal registro di fase secondo quando descritto prima:
 \[
-M = \floor*{2^p\frac{f_{clk}}{f}}
+\phi = \frac{2\pi \code{F}}{2^\code{N}}
+\]
+
+Essendo \code{F} a precisione finita, si avrà un errore (TODO: basso) sulla precisione della fase del segnale.
+
+Sommando la frequency tuning word al valore del registro di fase \code{F} si ottiene il nuovo valore \code{F'},
+e poiché l'addizione avviene ad ogni periodo di clock $T_{clk}$ i valori della fase del segnale corrispondenti sono
+$\phi(t)$ e $\phi(t + T_{clk})$.
+Si può quindi ricavare la \code{FTW} imponendo:
+\[
+\code{FTW} = \code{F'} - \code{F} = 
+\floor{\frac{2^\code{N}}{2\pi}\phi(t+T_{clk}) - \frac{2^\code{N}}{2\pi}\phi(t)}
+= \floor{2^\code{N} f T_{clk}} = \floor{2^\code{N} \frac{f}{f_{clk}}}
 \]
 
 Dove $\floor{\cdot}$ indica la parte intera.
 
-La frequenza effettiva $f_{o}$ del segnale risultante è dunque
+La frequenza effettiva $f_{o}$ del segnale risultante dalla DDS è dunque
 \[
-f_{o} = \frac{2^p}{M} f_{clk}
+f_{o} = \frac{\phi(T_{clk}) - \phi(0)}{2\pi T_{clk}} = \frac{2\pi \code{FTW}}{2^\code{N} 2 \pi T_{clk}} = \frac{\code{FTW}}{2^N} f_{clk}
 \]
 in generale diversa dalla $f$ desiderata per via dell'errore di troncamento della fase.
 

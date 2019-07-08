@@ -1,5 +1,3 @@
-\newcommand{\code}[1]{\texttt{#1}} 
-
 \newcommand{\blockdiagram}[4]{
 	\begin{tikzpicture}[font=\sffamily,>=triangle 45]
          \node [circuit] (item) {};
@@ -41,9 +39,51 @@ Dal punto di vista architetturale si può considerare il progetto come composto 
 
 Le due componenti sono implementate in logica sincrona e sono collegate da una lookup table che memorizza le note attive. Alla ricezione di un evento MIDI \textit{note on} il bit corrispondente alla nota nella LUT viene portato al valore logico alto, e al seguente istante di campionamento la componente che genera il segnale di output userà questo valore per determinare se suonare o meno la nota.
 
+\section{Scelta dei parametri di progetto}
+Mentre la frequenza di clock $f_{clk} = \SI{100}{\mega\hertz}$ e 
+la frequenza di campionamento minima $f_{s,min} = 2 \cdot \SI{21000}{\hertz}$
+sono date, non sono note a priori i seguenti parametri:
+\begin{itemize}
+    \item \textbf{\code{b}}: Numero di bit usati per quantizzare la forma d'onda
+    \item \textbf{\code{N}}: Numero di bit usati per il registro di fase nel phase accumulator
+    \item \textbf{\code{M}}: Numero di bit presi tra i primi bit del registro di fase e usati per indirizzare i campioni
+\end{itemize}
+
+Utilizzando i vincoli imposti dalla conversione D/A in PWM, si 
+ottiene il numero massimo di bit del quantizzatore imponendo che
+
+\[
+\code{b} < \lceil \log_{2}{\frac{f_{clk}}{f_{s,min}}} \rceil = 12
+\]
+
+Conviene quindi massimizzare \code{b} per avere una minore errore di quantizzazione,
+e allo stesso tempo massimizzare il più possibile $f_s$, scegliendola per comodità
+come sottomutiplo della frequenza di clock.
+Si ottiene così $\code{b} = 11$ e $f_s = \SI{48828}{\hertz}$
+
+Nella seguente tabella sono riportati i valori dei parametri e, in aggiunta, i relativi
+nomi all'interno del progetto VHDL.
+
+\begin{tabular}{| c | c | m{10em} | l | }
+ \hline
+ \textbf{Parametro} & \textbf{Valore} & \textbf{Descrizione} & \textbf{VHDL constant}\\
+ \hline
+ $f_{clk}$  & \SI{100}{\mega \hertz} & frequenza di clock del FPGA  & \code{clock\_frequency}\\
+ \hline
+ $f_s$ &  \SI{48828}{\hertz} & frequenza di campionamento & \code{sampling\_frequency}\\
+ \hline
+ \code{b} & 11 & numero di bit dei campioni & \code{sample\_bits}\\
+ \hline
+ \code{N} & 32 & numero di bit del registro di fase e della frequency tuning word & \code{phase\_bits}\\
+ \hline
+ \code{M} & 13  & numero di bit degli indirizzi dei campioni & \code{address\_bits}\\
+ \hline
+\end{tabular}
+
 \section{Componenti fondamentali}
 I seguenti blocchi fondamentali corrispondono in VHDL al costrutto di \textit{entity} e veranno analizzati dettagliatamente in seguito:
 
+TODO: aggiungere contatore e low\_to\_high\_detector
 \begin{itemize}
 	\item \hyperref[sec:uart]{uart} Si occupa della ricezione seriale a 31250 baud secondo le specifiche MIDI
 	\item \hyperref[sec:mididec]{midi\_decoder}  State machine che codifica i byte ricevuti dal blocco uart in eventi MIDI; gestisce solamente gli eventi note on/off
@@ -78,17 +118,6 @@ I seguenti blocchi fondamentali corrispondono in VHDL al costrutto di \textit{en
 	    o\_data \\ o\_data\_available
     }
 \end{center}
-
-I messaggi MIDI vengono trasmessi in maniera seriale e vengono ricostruiti da un convertitore seriale/parallelo detto \textit{UART}(Universal Asynchronous Receiver-Transmitter).
-La comunicazione MIDI segue il protocollo RS-232 e funziona nel seguente modo:
-\begin{itemize}
-	\item In assenza di comunicazione, la linea dati viene mantenuta al valore logico alto
-	\item Per compiere una trasmissione, il trasmettitore porta la linea dati al valore logico basso per la durata $T_{bit}$, e questo valore prende il nome di \textit{start bit}.
-	\item I bit da trasmettere vengono inviati in sequenza, in ordine dal bit meno significativo al più significativo; ad ogni bit corrisponde il valore logico alto o basso sulla linea dati per il periodo $T_{bit}$
-	\item Alla fine di tramissione la linea dati viene portata al valore logico alto per un tempo di almeno $T_{bit}$, cioè si invia uno \textit{stop bit}.
-\end{itemize}
-Si noti che è necessaria a priori la conoscenza del numero di bit da trasmettere perché la comunicazione abbia successo; nello standard MIDI, ad ogni comunicazione viene inviato un byte e quindi 8 bit.
-Il protocollo RS-232 permette anche l'aggiunta di un secondo stop bit e di un \textit{parity bit} per il controllo degli errori, tuttavia questi non sono usati nella comunicazione MIDI.
 
 Il blocco uart è composto da una finite state machine (fsm) e uno shift register da 9 bit, contenente inizialmente i valori '0' tranne per il bit più significativo che è posto a '1' e funge da sentinella. La lettura della linea dati avviene periodicamente alla frequenza $f = \frac{1}{T_{bit}} = 31250 \si{Hz}$; alla ricezione dello start bit, la fsm entra nello stato di ricezione e si fa avanzare lo shift register leggendo il valore presente sulla linea nel bit più significativo, facendo contemporaneamente slittare gli altri verso destra.
 A lettura ultimata, lo shift register sarà avanzato di 8 posizioni e il bit meno significativo dello shift register contiene il bit sentinella; con questo si indica la fine della trasmissione.
@@ -158,7 +187,8 @@ Scrivere riguardo ad alta impedenza
 
 \section{Componente ROM}
 \label{sec:rom}
-Le ftw e la forma d'onda da riprodurre vengono generate attraverso MATLAB e salvate in un file.
+Le ftw e la forma d'onda da riprodurre vengono generate attraverso due
+script python e salvate in un file.
 Il package generico rom permettere al progetto di avere queste informazioni in fase di sintesi: si specificano i tre parametri \code{word\_bits}, che indica il numero di bit per parola nella memoria, \code{address\_bits}, che indica il numero di bit necessari a indirizzare una parola, e \code{rom\_filename}, che specifica il file testuale da leggere contenente le parole della rom.
 Il file deve essere formattato nel seguente modo: ci sono tante righe quanti sono gli indirizzi della memoria, ogni riga è una stringa binaria
 di lunghezza fissa e rappresenta la parola memorizzata.
@@ -190,6 +220,7 @@ end package rom;
 		o\_sample\_ready
 	}
 \end{center}
+
 
 Il componente principale del sintetizzatore ha accesso alla LUT contenenti le note attive e genera ad ogni periodo di campionamento
 un campione del segnale.
@@ -227,12 +258,12 @@ begin
 end generate oscillators;
 \end{lstlisting}
 
-Il campione viene fornito all'output \code{o\_sample} e viene generato attraverso un processo di mixing.
+Il campione viene fornito alla porta \code{o\_sample} e viene generato attraverso un processo di mixing.
 Il mixing consiste nel seguente processo, ripetuto per ogni valore della LUT delle note attive:
 \begin{itemize}
     \item Se la nota è attiva, si carica il valore campionato della forma d'onda ad essa relativa:
           il valore campionato viene ottenuto dalla ROM dei campioni, usando come indice
-          i primi ??? bit dell'accumulatore di fase: infatti questo è il
+          i primi \code{M} bit dell'accumulatore di fase: infatti questo è il
           \textbf{phase to amplitude converter} (PAC)
     \item Il valore del campione viene sommato su un registro inizialmente nullo
 \end{itemize} 
@@ -252,4 +283,36 @@ campione, in cui l'output \code{o\_sample\_ready} assume il valore
 logico alto per indicare la presenza di un campione.
 
 TODO: commentare sul fatto che c'è ampio margine di tempo, magari calcolare
+      (considerazione da spostare nella sezione successiva)
 
+\section{Difficoltà di implementazione e vincoli temporali}
+Nel corso dello sviluppo del progetto una dei problemi più difficili da affrontare
+è stato quello cdl rispetto dei vincoli temporali nell'implementazione dell'engine
+del sintetizzatore.
+
+Inizialmente questo era stato implementato come un componente asincrono, dotato di 
+128 ingressi collegati alla LUT delle note attive, e 128 ingressi da \code{sample\_bits}
+ciascuno collegati direttamente alla memoria dei campioni.
+In totale il componente aveva quindi $128+128*11 = 1536$ bit in ingresso, senza contare
+il sommatore e i multiplexer necessari alla selezione delle note.
+Data la complessità del componente, questo veniva sintetizzato con una lunga catena
+di sommatori a due ingressi collegati in cascata; tuttavia le catene di propagazione più lunghe
+non rispettavano i vincoli temporali, avendo un WNS fino a ???
+
+Si è quindi convertito il mixer in un componene sincrono, che sommasse ogni campione
+ad un ciclo di clock; tuttavia anche in questo caso si ottenevano due path con WNS di ???
+
+Una soluzione si sarebbe potuta ottenere dilatando il tempo tra due operazioni di somma
+successive, impostando i parametri di progetti in modo da allentare i timing constraints
+su queste path.
+Un'altra soluzione simile sarebbe quella di usare un clock diverso per il processo di mixing.
+Entrambe le soluzioni tuttavia richiedevano una conoscenza approfondita di Vivado,
+e la seconda soluzione necessita della comunicazione tra componenti aventi 
+clock diversi, detto \textit{clock domain crossing}, e molto complesso da
+implementare.
+
+Notando che la path che non rispettava i vincoli temporali attraversava
+il sommatore, si è deciso di rendere l'operazione di caricamento del campione
+e quella di somma distinte, formando così l'architettura a pipeline a due stadi descritta prima.
+
+Così facendo il WNS diventa di $\SI{1.911}{\nano \second}$ e i vincoli temporali sono rispettati.

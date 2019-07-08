@@ -1,4 +1,4 @@
-\chapter{Dispositivi Hardware della scheda Nexys4 DDR}
+\chapter{La scheda Nexys4 DDR}
 
 L'hardware utilizzato per il progetto consiste in una scheda Nexys4 DDR.
 
@@ -9,8 +9,10 @@ Per la realizzazione del sintetizzatore si farà uso dei seguenti componenti:
 \begin{itemize}
     \item \textbf{Bridge USB-UART} Il bridge USB<->UART permette la lettura
           dei messaggi MIDI, inviati dal computer attraverso la porta seriale
-    \item \textbf{Mono Audio Output} Un connettore audio monofonico di tipo ??? 
+    \item \textbf{Mono Audio Output} Un connettore audio monofonico di tipo minijack 
           viene usato per emettere il suono.
+    \item \textbf{Clock Crystal} Il cristallo che fornisce un clock di \SI{100}{\mega\hertz}
+          al FPGA e alla scheda.
 \end{itemize}
 
 L'output fornito dal jack audio viene generato attraverso un convertitore analogico/digitale,
@@ -22,6 +24,21 @@ Descrizione di almeno la risposta in frequenza
 
 
 \section{FPGA}
+Field-programmable Gate Array (FPGA) è un circuito digitale integrato
+capace di implementare le più svariate funzioni in modo programmatico:
+può essere utilizzato per la fase di prototipazione di Application-specific
+Integrated Circuits (ASIC), oppure per sostituirli nel caso i costi
+di integrare il FPGA nel progetto siano minori dei costi di sviluppo
+e realizzazione dell'ASIC (che di solito sono più vantaggiosi per volumi
+di produzione molto grandi).
+Un FPGA, data la sua natura generale, offre performance inferiori sia
+in consumi che in prestazioni rispetto ad un ASIC, ma ha come vantaggio
+la riprogrammabilità (anche una volta integrato nel progetto), che
+è invece impossibile con un circuito integrato specifico. 
+Un altro uso che si va affermando negli ultimi anni è l'utilizzo dei
+FPGA come acceleratori software, ad esempio per applicazioni di 
+trading finanziaro e intelligenza artificiale. (citare?)
+
 \subsection{Struttura di un FPGA}
 Un Field-programmable Gate Array (FPGA) è un circuito digitale integrato
 avente una struttura regolare, e contente:
@@ -52,12 +69,11 @@ circuiti esterni, tra cui:
 \end{itemize}
 
 Il FPGA utilizzato dalla scheda Nexys 4 DDR è uno Xilinx Artix 7 XC7A100T.
-Esso contiene 15850 logic slices (ognuno di essi composto da più
-configurable logic blocks) e sei clock management tiles (CMT) con
-phase-locked loop.
+Esso contiene 15850 logic slices (i blocchi elementare di un CLB) e sei
+ clock management tiles (CMT) con phase-locked loop.
 Inoltre, di importanza per il progetto trattato, sono i 240 DSP slices, 
-componenti dedicati (semi-configurabili?) che rendono più efficiente
-l'implementazione dei sommatori e i 4860 Kbits di Block Ram (BRAM),
+componenti dedicati che rendono più efficiente
+l'implementazione dei sommatori, e i 4860 Kbits di Block Ram (BRAM),
 che verranno impiegati in fase di sintesi per memorizzare sia la forma
 d'onda campionata che le frequency tuning words impiegate nella digital
 direct synthesis.
@@ -88,16 +104,29 @@ all'incirca le seguenti operazioni:
           del FPGA in fase di programmazione
 \end{itemize}
 
+\section{Vincoli temporali}
 In fase di progetto e di sviluppo il design può essere simulato e analizzato
 ben prima di passare alla programmazione della scheda.
 Un passo particolarmente importante è l'analisi dei tempi di propagazione:
 successivamente al place and route è possibile calcolare il tempo di propagazione
-del segnale attraverso la logica implementata. Nel caso in cui siano presenti
+del segnale attraverso i circuiti del FPGA. Nel caso in cui siano presenti
 delle route con un tempo di propagazione troppo lungo, sarà necessario
 intervenire a livello del design o addirittura manualmente nel posizionamento
 dei blocchi sulla FPGA.
+Questo passo viene detto soddisfacimento dei vincoli temporali (timing constraints).
 
-Come verrà descritto più avanti, per questo progetto è stato necessario
-modificare l'implementazione del sintetizzatore più volte per garantire il
-soddisfacimento dei vincoli temporali, resa difficoltosa dal grande numero
-di route necessarie alla polifonia (??? o era per via della memoria dei campioni?)
+Il periodo di clock utilizzato nel progetto, e il minimo possibile sulla
+scheda Nexys, è di $T_{clk} = \SI{10}{\nano\second}$.
+In un collegamento tra due elementi sequenziali (ad esempio flip-flop)
+il tempo di propagazione dell'uscita del primo elemento all'entrata del
+secondo elemento non può quindi superare il periodo di clock.
+Ordinando tutte le route per tempo di propagazione decrescente, e
+considerando quella avente tempo $t_{max}$ di propagazione maggiore, si definisce
+il \textbf{Worse Negative Slack} (WNS) come:
+
+\[
+\textrm{WNS} = T_{clk} - t_{max}
+\] 
+
+Quando questo diventa negativo vuol dire che i timing constraints non
+sono rispettati. 

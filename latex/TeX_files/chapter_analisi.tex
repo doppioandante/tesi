@@ -1,5 +1,25 @@
-\chapter{Analisi delle prestazioni}
-mettere difficoltà di implementazione
-(mixer parallelo, mixer seriale senza pipeline, mixer con pipeline)
+\chapter{Testing e analisi delle prestazioni}
+Il testing del progetto sulla scheda Nexys4 DDR è stato condotto
+attraverso la porta seriale della scheda e mediante l'uso di uno
+script Python che automatizzasse la riproduzione di un file MIDI 
+(si veda \code{scripts/play\_midi\_file.py} (aggiungere citazione al codice).
 
-implementazione?
+Per effettuare il testing funzionale delle varie componenti del progetto
+si è fatto uso di \textit{testbenches} scritti in VHDL, che fornissero
+un input prefissato a un certo componente per verificarne la risposta,
+utilizzando sempre GHDL.
+In particolare il testbench descritto nel file
+ \code{vhdl/mono\_synth\_engine\_tb.vhd} provvede a testare l'intera
+architettura riproducendo una singola nota.
+L'uscita del blocco \code{pwm\_encoder} viene quindi salvata ad ogni
+ciclo di clock su un file txt, che viene in seguito processato
+dallo script \code{scripts/plot\_pwm\_output.py} che lo filtra
+digitalmente e visualizza il segnale ricostruito.
+
+Data la complessità computazionale di una simulazione, il testbench
+di prova dell'intero progetto può impiegare fino a diversi minuti
+per generare un output che realmente avrebbe durata nell'ordine della
+decina di millisecondi.
+
+\section{Qualità del segnale sintetizzato}
+
