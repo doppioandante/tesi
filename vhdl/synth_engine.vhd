@@ -42,14 +42,22 @@ architecture behavioural of synth_engine is
     type phase_vec_type is array (0 to MAX_MIDI_NOTE_NUMBER) of phase_type;
     signal phase_vec: phase_vec_type;
 
-    signal scanning_counter: std_logic_vector(6 downto 0) := (others => '0');
-
     constant counter_limit: positive := clock_frequency/sampling_frequency;
     constant counter_bits: positive := get_counter_bits(clock_frequency, sampling_frequency);
+    -- register used to count clock cycles inside a sampling period
     signal counter: std_logic_vector(counter_bits-1 downto 0);
     signal sample_value: signed(sample_bits-1 downto 0) := (others => '0');
     signal mixed_output: signed(sample_bits-1 downto 0) := (others => '0');
-    signal load_sample: boolean := true;
+
+    -- counter_limit - numer of midi notes - additional pipeline stages
+    constant counter_end_pipeline: integer := counter_limit - 1;
+    constant counter_start_pipeline: integer :=  counter_end_pipeline - (MAX_MIDI_NOTE_NUMBER+1) - 1;
+    constant pipeline_operations_number: integer := counter_end_pipeline - counter_start_pipeline;
+
+    signal extended_active_notes: std_logic_vector(pipeline_operations_number-1 downto 0);
+
+    -- register used to scan extended_active_notes
+    signal scanning_counter: std_logic_vector(7 downto 0) := (others => '0');
 begin
     -- instantiate the 128 indipendent NCOs
     -- and 128 synchronous reset blocks.
@@ -96,40 +104,43 @@ begin
         o_signal => o_sample_ready
     );
 
+    -- initialization of extended_active_notes
+    -- this vector is needed for not going out of bound while
+    -- loading samples in the pipeline
+    -- the beginning i_active_notes, padded with zeros at the end
+    -- this allows the last operation(s) to work correctly
+    extended_active_notes <= '0' & i_active_notes;
+
     -- for each phase accumulator, lookup the corresponding sample
     -- and add it to the total mix
     -- also keep count of the number of active notes
     sampling_process:
-
-    process (i_clock, counter, scanning_counter, i_active_notes, phase_vec, load_sample, sample_value, mixed_output)
+    process (i_clock, counter, scanning_counter, extended_active_notes, phase_vec, sample_value, mixed_output)
         variable note_index: integer;
     begin
         if rising_edge(i_clock) then
-            if unsigned(counter) >= counter_limit-1 - 2*(MAX_MIDI_NOTE_NUMBER-1)
-                and o_sample_ready = '0'
+            if unsigned(counter) >= counter_start_pipeline and
+               unsigned(counter) < counter_end_pipeline
             then
-                if load_sample then
-                    note_index := to_integer(scanning_counter);
-
-                    if i_active_notes(note_index) = '1' then
-                        -- use the upper bits of the phase accumulator to select
-                        -- the corresponding sample in waveform memory
-                        sample_value <= signed(waveform_rom.read_at(to_integer(
-                            phase_vec(note_index)(phase_bits-1 downto phase_bits-waveform_address_bits)
-                        )));
-                    else
-                        sample_value <= to_signed(0, sample_bits);
-                    end if;
-                    scanning_counter <= scanning_counter + 1;
-
-                else -- perform the sum
-                    mixed_output <= mixed_output + sample_value;
+                note_index := to_integer(scanning_counter);
+                -- first pipeline stage: load sample_value
+                if extended_active_notes(note_index) = '1' then
+                    -- use the upper bits of the phase accumulator to select
+                    -- the corresponding sample in waveform memory
+                    sample_value <= signed(waveform_rom.read_at(to_integer(
+                        phase_vec(note_index)(phase_bits-1 downto phase_bits-waveform_address_bits)
+                    )));
+                else
+                    sample_value <= to_signed(0, sample_bits);
                 end if;
-                load_sample <= not load_sample;
+
+                -- second pipeline stage: sum the previous sample_value
+                mixed_output <= mixed_output + sample_value;
+
+                scanning_counter <= scanning_counter + 1;
             elsif o_sample_ready = '1' then
                 scanning_counter <= (others => '0');
                 mixed_output <= (others => '0');
-                load_sample <= true;
             end if;
         end if;
     end process;
