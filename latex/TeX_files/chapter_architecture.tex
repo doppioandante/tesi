@@ -184,6 +184,13 @@ L'accumulatore di fase è un registro che viene incrementato ad ogni ciclo di cl
 L'encoder PWM si occupa di leggere il campione presente alla porta i\_sample alla frequenza $f_s$ di campionamento
 Scrivere considerazioni sul range del segnale di uscita, codifica, aritmetica con segno.
 Scrivere riguardo ad alta impedenza
+\begin{figure}
+	\centering
+	\def\svgwidth{\columnwidth}
+	\includegraphics[width=0.7\columnwidth]{TeX_files/pwm_ramp.eps}
+	\caption{Esempio di PWM: nel grafico sopra è riportato il valore del campione $x(kT_s)$ (tratteggio blu), che viene comparato al contatore.
+	Quando il contatore supera il valore di $x(kT_s)$, \code{o\_pwm\_signal} passa da $x_{max}$ a $0$. }
+\end{figure}
 
 \section{Componente ROM}
 \label{sec:rom}
@@ -194,7 +201,8 @@ Il file deve essere formattato nel seguente modo: ci sono tante righe quanti son
 di lunghezza fissa e rappresenta la parola memorizzata.
 Gli indirizzi partono da 0 (prima riga) e aumentano di un unità ad ogni riga.
 È possibile leggere dalla ROM usando la funzione \code{read\_at}, specificando come argomento l'indirizzo desiderato.
-\begin{lstlisting}[language=VHDL]
+
+\begin{minted}{VHDL}
 package rom is
   generic (
     word_bits: positive;
@@ -206,7 +214,7 @@ package rom is
      address: in integer range 0 to 2**address_bits-1
   ) return word_type;
 end package rom;
-\end{lstlisting}
+\end{minted}
 
 \section{Synth Engine}
 \label{sec:synthengine}
@@ -229,21 +237,20 @@ Attraverso il package \hyperref[sec:rom]{rom} vengono rese disponibili a questo 
 tuning word corrispondenti ad ogni possibile nota suonata.
 Attraverso il costrutto \code{for .. generate} vengono generati 128 accumulatori di fase indipendenti. Ad ognuno di questi viene accoppiata
 una entity che ne esegue il reset quando una nota passa dal valore logico basso a quello alto nella LUT.
-\begin{lstlisting}[language=VHDL]
+
+\begin{minted}{VHDL}
 oscillators:
 for i in 0 to MAX_MIDI_NOTE_NUMBER generate
     signal ftw: std_logic_vector(phase_bits-1 downto 0);
     signal reset_signal: std_logic := '0';
 begin
     ftw <= phase_rom.read_at(i);
-
     reset_generator: entity work.low_to_high_detector
     port map (
         i_clock => i_clock,
         i_signal => i_active_notes(i),
         o_detected => reset_signal
     );
-
     accumulator: entity work.phase_accumulator
     generic map (
         clock_frequency => clock_frequency,
@@ -256,7 +263,7 @@ begin
         o_phase_reg => phase_vec(i)
     );
 end generate oscillators;
-\end{lstlisting}
+\end{minted}
 
 Il campione viene fornito alla porta \code{o\_sample} e viene generato attraverso un processo di mixing.
 Il mixing consiste nel seguente processo, ripetuto per ogni valore della LUT delle note attive:
@@ -268,7 +275,7 @@ Il mixing consiste nel seguente processo, ripetuto per ogni valore della LUT del
     \item Il valore del campione viene sommato su un registro inizialmente nullo
 \end{itemize} 
 
-Tuttavia, come verrà chiarito in seguito (aggiungere hyperref),
+Come verrà chiarito nella \cref{sec:timing_impl}
 l'implementazione fa uso di una pipeline a due stadi:
 il primo stadio della pipeline provvede alla PAC, mentre il secondo stadio
 esegue parallelamente il mixing con il valore ottenuto dallo stadio
@@ -281,11 +288,21 @@ appena prima della fine del periodo di campionamento.
 Questo avviene all'ultimo ciclo di clock della fase di produzione del
 campione, in cui l'output \code{o\_sample\_ready} assume il valore
 logico alto per indicare la presenza di un campione.
+\begin{figure}
+	\centering
+	\def\svgwidth{\columnwidth}
+	\includegraphics[width=\columnwidth]{TeX_files/synth_engine.eps}
+	\caption{Architettura con pipeline a due stadi. Ogni multiplexer
+	 in uscita ad un NCO controlla se la nota è attiva nella LUT; il
+     multiplexer principale, comandato da un contatore, carica la pipeline
+     con un nuovo campione. Seguono poi lo stadio di PAC (ossia il caricamento del campione dalla ROM) e il mixing.}
+\end{figure}
 
 TODO: commentare sul fatto che c'è ampio margine di tempo, magari calcolare
       (considerazione da spostare nella sezione successiva)
 
 \section{Difficoltà di implementazione e vincoli temporali}
+\label{sec:timing_impl}
 Nel corso dello sviluppo del progetto una dei problemi più difficili da affrontare
 è stato quello cdl rispetto dei vincoli temporali nell'implementazione dell'engine
 del sintetizzatore.
