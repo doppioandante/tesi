@@ -10,7 +10,14 @@ mentre i rimanenti 7 bit possono rappresentare valori da da 0 a 127.
 I primi 4 bit dello status byte identificano il tipo di messaggio MIDI, mentre gli ultimi 4 specificano il canale su cui il messaggio ha effetto,
 per un massimo possibile di 16 canali.
 
-(aggiungere figura con un messaggio midi note on di esempio)
+\begin{figure}
+    \centering
+    \def\svgwidth{\columnwidth}
+    \includegraphics[width=0.7\columnwidth]{TeX_files/midi_message.eps}
+    \caption{Struttura di un messaggio MIDI di tipo \textit{note on},
+    	     con note number 69 e velocity 60. In rosso è evidenziato
+             il bit più significativo.}
+\end{figure}
 
 Ai fini del progetto, verranno gestiti solamente i messaggi di \textbf{note on} e \textbf{note off} sul canale '0', mentre
 ogni altro tipo di messaggio sarà ignorato.
@@ -22,11 +29,8 @@ messaggio.
 Il messaggio note off è analogo e viene trasmesso quando si vuole
 interrompere la riproduzione di una certa nota, e il suo status byte
 ha il formato \textit{1000xxxx}.
-
 Un altro modo di interrompere la nota (citare standard) è quello di mandare
 un messaggio \textit{note on} con \textit{velocity} impostata a zero.
-
-\pagebreak
 
 \section{Physical Layer}
 I messaggi MIDI vengono trasmessi in maniera seriale e vengono ricostruiti da un convertitore seriale/parallelo detto \textit{UART}(Universal Asynchronous Receiver-Transmitter).
