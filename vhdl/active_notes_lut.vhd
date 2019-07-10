@@ -26,7 +26,11 @@ begin
             note_index := to_integer(i_message.data_1);
 
             if i_message.msg_type = note_on then
-                o_active_notes_reg(note_index) <= '1';
+                if to_integer(i_message.data_2) = 0 then
+                    o_active_notes_reg(note_index) <= '0';
+                else
+                    o_active_notes_reg(note_index) <= '1';
+                end if;
             else
                 o_active_notes_reg(note_index) <= '0';
             end if;
