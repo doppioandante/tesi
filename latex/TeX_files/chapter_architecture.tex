@@ -33,9 +33,9 @@
 
 L'architettura da sintetizzare su FPGA è stata sviluppata utilizzando il linguaggio VHDL, facendo
 ampiamente uso di molte funzionalità della versione VHDL-2008.
-Il progetto è stato sintetizzato usando il software Vivado 2018.2 della Xilinx e simulato usando il compilatore/simulatore open-source GHDL.
+Il progetto è stato sintetizzato usando il software Vivado 2019.1 della Xilinx e simulato usando il compilatore/simulatore open-source GHDL.
 
-Dal punto di vista architetturale si può considerare il progetto come composto da due macro-blocchi indipendenti: uno che si occupa di gestire i segnali MIDI dati in input al sintetizzatore, e uno che si occupa di generare il segnale audio in uscita.
+Dal punto di vista architetturale si può considerare il progetto come composto da due macro-blocchi indipendenti: uno che si occupa di gestire i segnali MIDI dati in input al sintetizzatore e uno che si occupa di generare il segnale audio in uscita.
 
 Le due componenti sono implementate in logica sincrona e sono collegate da una lookup table che memorizza le note attive. Alla ricezione di un evento MIDI \textit{note on} il bit corrispondente alla nota nella LUT viene portato al valore logico alto, e al seguente istante di campionamento la componente che genera il segnale di output userà questo valore per determinare se suonare o meno la nota.
 
@@ -53,7 +53,7 @@ Utilizzando i vincoli imposti dalla conversione D/A in PWM, si
 ottiene il numero massimo di bit del quantizzatore imponendo che
 
 \[
-\code{b} < \lceil \log_{2}{\frac{f_{clk}}{f_{s,min}}} \rceil = 12
+\code{b} < \Big \lceil \log_{2}{\frac{f_{clk}}{f_{s,min}}} \Big \rceil = 12
 \]
 
 Conviene quindi massimizzare \code{b} per avere una minore errore di quantizzazione,
@@ -83,19 +83,46 @@ nomi all'interno del progetto VHDL.
 \section{Componenti fondamentali}
 I seguenti blocchi fondamentali corrispondono in VHDL al costrutto di \textit{entity} e veranno analizzati dettagliatamente in seguito:
 
-TODO: aggiungere contatore e low\_to\_high\_detector
 \begin{itemize}
-	\item \hyperref[sec:uart]{uart} Si occupa della ricezione seriale a 31250 baud secondo le specifiche MIDI
-	\item \hyperref[sec:mididec]{midi\_decoder}  State machine che codifica i byte ricevuti dal blocco uart in eventi MIDI; gestisce solamente gli eventi note on/off
-	mentre scarta tutti gli altri eventi MIDI.
-	\item \hyperref[sec:noteslut]{active\_notes\_lut} Tabella di lookup contenente 128 valori booleani che indicano l'attivazione di una nota
-	\item \hyperref[sec:phaseaccumulator]{phase\_accumulator} Opera l'accumulazione di fase per la DDS
-	\item \hyperref[sec:pwmencoder]{pwm\_encoder} Genere la modulazione PWM corrispondente in uscita
-	a partire da un campione fornito in entrata
-	\item \hyperref[sec:rom]{rom} Package generico che rappresenta una read-only memory.
-	\item \hyperref[sec:synthengine]{synth\_engine} Cuore del sintetizzatore, provvede alla DDS a partire dai valori presenti in active\_notes\_lut, alla phase-to-amplitude conversion attraverso una ROM e al mixing.
-	\item synth\_top Entità top del progetto, cioè che contiene tutte le altre entity e le istanzia nel modo corretto, impostando le frequenze di lavoro dei componenti.
+    \item \hyperref[sec:counter]{counter\_impulse\_generator} Un contatore con frequenza di reset variabile, viene
+    usato principalmente per la sincronizzazione temporale tra diversi componenti
+    \item \hyperref[sec:lowhigh]{low\_to\_high\_detector} Componente ausiliario che trasforma la variazione
+    del segnale in ingresso dal valore logico basso a quello alto in un impulso della durata di un ciclo
+    di clock
+    \item \hyperref[sec:uart]{uart} Si occupa della ricezione seriale a 31250 baud secondo le specifiche MIDI
+    \item \hyperref[sec:mididec]{midi\_decoder}  State machine che codifica i byte ricevuti dal blocco uart in eventi MIDI; gestisce solamente gli eventi note on/off
+    mentre scarta tutti gli altri eventi MIDI.
+    \item \hyperref[sec:noteslut]{active\_notes\_lut} Tabella di lookup contenente 128 valori booleani che indicano l'attivazione di una nota
+    \item \hyperref[sec:phaseaccumulator]{phase\_accumulator} Opera l'accumulazione di fase per la DDS
+    \item \hyperref[sec:pwmencoder]{pwm\_encoder} Genera la modulazione PWM corrispondente in uscita
+    a partire da un campione fornito in entrata
+    \item \hyperref[sec:rom]{rom} Package generico che rappresenta una read-only memory.
+    \item \hyperref[sec:synthengine]{synth\_engine} Cuore del sintetizzatore, provvede alla DDS a partire dai valori presenti in active\_notes\_lut, alla phase-to-amplitude conversion attraverso una ROM e al mixing.
+    \item synth\_top Entità top del progetto, cioè che contiene tutte le altre entity e le istanzia nel modo corretto, impostando le frequenze di lavoro dei componenti.
 \end{itemize}
+
+\section{Contatore Generico}
+\label{sec:counter}
+
+\begin{center}
+	\blockdiagram{2}{2}{
+		i\_clock \\ i\_rst
+	}{
+	    o\_signal \\ o\_counter
+    }
+\end{center}
+L'entity \code{counter\_impulse\_generator} implementa un contatore generico.
+Facendo uso dei parametri generici del VHDL è possibile impostare per ogni istanza
+del componente una diversa frequenza di reset.
+Il contatore utilizza un registro che viene incrementato ad ogni ciclo di clock
+e la sua dimensione in bit è calcolata automaticamente a partire dalle frequenze
+di reset e di clock. Il valore del registro è esposto alla porta \code{o\_counter}.
+Al reset del contatore il segnale di output \code{o\_signal} viene portato al valore
+logico alto per un ciclo di clock.
+Si utilizza questo segnale per abilitare i componenti che devono
+effettuare operazioni a una frequenza inferiore alla frequenza di clock:
+ad esempio per pilotare il processo di campionamento si fa uso di un contatore
+avente frequenza di reset uguale alla frequenza di campionamento \code{sampling\_frequency}.
 
 \section{Blocco UART}
 \label{sec:uart}
@@ -120,7 +147,7 @@ TODO: aggiungere contatore e low\_to\_high\_detector
 \end{center}
 
 Il blocco uart è composto da una finite state machine (fsm) e uno shift register da 9 bit, contenente inizialmente i valori '0' tranne per il bit più significativo che è posto a '1' e funge da sentinella. La lettura della linea dati avviene periodicamente alla frequenza $f = \frac{1}{T_{bit}} = 31250 \si{Hz}$; alla ricezione dello start bit, la fsm entra nello stato di ricezione e si fa avanzare lo shift register leggendo il valore presente sulla linea nel bit più significativo, facendo contemporaneamente slittare gli altri verso destra.
-A lettura ultimata, lo shift register sarà avanzato di 8 posizioni e il bit meno significativo dello shift register contiene il bit sentinella; con questo si indica la fine della trasmissione.
+A lettura ultimata, lo shift register è avanzato di 8 posizioni e il bit meno significativo dello shift register contiene il bit sentinella; con questo si indica la fine della trasmissione.
 
 \section{MIDI decoder}
 \label{sec:mididec}
@@ -140,6 +167,31 @@ In realtà il componente è molto semplificato in quanto interpreta solo i messa
 Il blocco è implementato attraverso una fsm; quando l'input \code{i\_enable} viene mantenuto alto per un ciclo di clock, la state machine avanza leggendo il byte \code{i\_data} in input.
 Quando il messaggio è stato completamente decodificato, l'output \code{o\_message\_available} assume un valore logico alto e il messaggio MIDI è disponibile in uscita al blocco.
 
+\section{Low to High detector}
+\label{sec:lowhigh}
+
+\begin{center}
+	\blockdiagram{2}{1}{
+		i\_clock \\ i\_signal
+	}{
+	    o\_detected
+    }
+\end{center}
+
+Quando l'entrata \code{i\_signal} passa dal valore logico basso a quello alto,
+\code{o\_detected} assume il valore logico alto per un singolo ciclo di clock.
+Un esempio di utilizzo di questo componente è la connessione tra i componenti
+\hyperref[sec:uart]{uart} e \hyperref[sec:mididec]{midi\_decoder}: il blocco
+\code{midi\_decoder} avanza la macchina a stati leggendo dall'ingresso quando
+la porta \code{i\_enable} si trova al valore logico alto. Se questa fosse
+collegata direttamente all'uscita \code{o\_data\_available} del blocco \code{uart},
+lo stesso byte verrebbe processato più volte non permettendo una decodifica
+corretta. Si intermezza questa connessione con un componente \code{low\_to\_high\_detector}
+cosicché alla presenza di un nuovo byte il decoder midi venga abilitato solo per
+un ciclo di clock.
+Nonostante la sua semplicità questa entity permette di semplificare altre situazioni
+in cui questo avviene all'interno del progetto.
+
 \section{Active Notes LUT}
 \label{sec:noteslut}
 
@@ -152,7 +204,7 @@ Quando il messaggio è stato completamente decodificato, l'output \code{o\_messa
 		o\_active\_notes\_reg
 	}
 \end{center}
-Quando il segnale \code{i\_enable} è alto per un ciclo di clock, il valore del messaggio midi in input viene letto e il registro \code{o\_active\_notes\_reg} viene modificato in modo che il bit in posizione corrispondente alla nota sia 1 o 0 a seconda che il messaggio sia note on oppure note off.
+Quando il segnale \code{i\_enable} è alto per un ciclo di clock, il valore del messaggio midi in input viene letto e il registro \code{o\_active\_notes\_reg} viene modificato in modo che il bit in posizione corrispondente alla nota sia 1 o 0 a seconda del contenuto del messaggio.
 
 \section{Accumulatore di Fase}
 \label{sec:phaseaccumulator}
@@ -166,9 +218,9 @@ Quando il segnale \code{i\_enable} è alto per un ciclo di clock, il valore del 
 		o\_phase\_reg
 	}
 \end{center}
-Parlare dei parametri generici
-L'accumulatore di fase è un registro che viene incrementato ad ogni ciclo di clock del valore presente in ingresso alla porta \code{i\_ftw}.
-È possibile il reset sincrono del registro impostando al valore logico alto il segnale \code{i\_rst\_sync}
+L'accumulatore di fase implementa il registro di fase utilizzato nella DDS.
+La grandezza del registro è impostabile attraverso il parametro generico \code{phase\_bits}.
+È possibile il reset sincrono del registro impostando al valore logico alto il segnale \code{i\_rst\_sync}.
 
 \section{PWM Encoder}
 \label{sec:pwmencoder}
@@ -181,15 +233,49 @@ L'accumulatore di fase è un registro che viene incrementato ad ogni ciclo di cl
 		o\_pwm\_signal
 	}
 \end{center}
-L'encoder PWM si occupa di leggere il campione presente alla porta i\_sample alla frequenza $f_s$ di campionamento
-Scrivere considerazioni sul range del segnale di uscita, codifica, aritmetica con segno.
-Scrivere riguardo ad alta impedenza
+Il \code{pwm\_encoder} funziona nel seguente modo: all'interno dell'entity
+è istanziato un registro contatore che viene incrementato ad ogni ciclo di clock
+e ritorna nullo dopo $K$ cicli di clock, dove
+\[
+  K = \floor{\frac{T_s}{T_{clk}}} = 2048
+\]
+uguale ai $2^b$ possibili valori che può assumere un campione.
+Si ha quindi
+\[
+  K = 2^b = \code{i\_sample\_max} + 1
+\]
+Dopo $T_{clk}K \approx T_s$ il contatore si riazzera e si ha un nuovo campione
+in ingresso.
+Il valore del campione \code{i\_sample} viene confrontato con quello del registro; se
+questo è maggiore del valore del contatore, l'uscita viene portata in alta impedenza,
+mentre se questo è minore l'uscita viene portata a zero.
+L'uscita \code{o\_pwm\_signal} pilota l'uscita audio monofonica e
+viene posta ad alta impedenza invece che al valore logico alto per permettere
+al circuito di gestire autonomamente il voltaggio di uscita.
+La frazione di tempo per cui \code{o\_pwm\_signal} rimane in alta impedenza
+in un intervallo di campionamento è di
+\[
+\frac{T_{clk}\code{i\_sample}}{K T_{clk}} = 
+\frac{\code{i\_sample}}{\code{i\_sample\_max}+1}
+\]
+
+Detto $v_{gain}$ il voltaggio massimo fornito al filtro passa-basso,
+si vede facilmente che la media sul periodo del segnale è
+\[
+v_{gain} \cdot\frac{\code{i\_sample}}{\code{i\_sample\_max}+1}
+ \approx v_{gain} \cdot \frac{\code{i\_sample}}{2^\code{b}} \approx v_{gain}s(k T_s)
+\]
+Dove si è usata all'ultimo passaggio l'\cref{eq:quantization}, ignorando gli errori
+dovuti alla DDS e alla quantizzazione.
+È chiaro quindi che il segnale dato in ingresso viene amplificato e
+ricostruito dal filtro in base a quanto detto nella \cref{sec:quantizationrom}.
+
 \begin{figure}
 	\centering
 	\def\svgwidth{\columnwidth}
 	\includegraphics[width=0.7\columnwidth]{TeX_files/pwm_ramp.eps}
-	\caption{Esempio di PWM: nel grafico sopra è riportato il valore del campione $x(kT_s)$ (tratteggio blu), che viene comparato al contatore.
-	Quando il contatore supera il valore di $x(kT_s)$, \code{o\_pwm\_signal} passa da $x_{max}$ a $0$. }
+	\caption{Esempio di PWM: nel grafico sopra è riportato il valore del campione $s(kT_s)$ (tratteggio blu), che viene comparato al contatore.
+	Quando il contatore supera il valore di $s(kT_s)$, \code{o\_pwm\_signal} passa da $x_{max}$ a $0$. }
 \end{figure}
 
 \section{Componente ROM}
@@ -236,7 +322,10 @@ un campione del segnale.
 Attraverso il package \hyperref[sec:rom]{rom} vengono rese disponibili a questo componente la forma d'onda campionata e le frequency
 tuning word corrispondenti ad ogni possibile nota suonata.
 Attraverso il costrutto \code{for .. generate} vengono generati 128 accumulatori di fase indipendenti. Ad ognuno di questi viene accoppiata
-una entity che ne esegue il reset quando una nota passa dal valore logico basso a quello alto nella LUT.
+una entity che ne esegue il reset quando una nota passa dal valore logico basso a quello alto nella LUT
+(si noti l'utilizzo del componente \hyperref[sec:lowhigh]{\code{low\_to\_high\_detector}}).
+
+\pagebreak
 
 \begin{minted}{VHDL}
 oscillators:
@@ -280,15 +369,7 @@ l'implementazione fa uso di una pipeline a due stadi:
 il primo stadio della pipeline provvede alla PAC, mentre il secondo stadio
 esegue parallelamente il mixing con il valore ottenuto dallo stadio
 precedente.
-
-Ogni avanzamento della pipeline viene eseguito in un ciclo di clock,
-e in totale sono necessari 129 cicli di clock
-(128 per ogni nota, più uno per caricare la pipeline) che vengono eseguiti
-appena prima della fine del periodo di campionamento.
-Questo avviene all'ultimo ciclo di clock della fase di produzione del
-campione, in cui l'output \code{o\_sample\_ready} assume il valore
-logico alto per indicare la presenza di un campione.
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\def\svgwidth{\columnwidth}
 	\includegraphics[width=\columnwidth]{TeX_files/synth_engine.eps}
@@ -298,27 +379,32 @@ logico alto per indicare la presenza di un campione.
      con un nuovo campione. Seguono poi lo stadio di PAC (ossia il caricamento del campione dalla ROM) e il mixing.}
 \end{figure}
 
-TODO: commentare sul fatto che c'è ampio margine di tempo, magari calcolare
-      (considerazione da spostare nella sezione successiva)
+Ogni avanzamento della pipeline viene eseguito in un ciclo di clock,
+e in totale sono necessari 129 cicli di clock
+(128 per ogni nota, più uno per caricare la pipeline) che vengono eseguiti
+appena prima della fine del periodo di campionamento.
+Questo avviene all'ultimo ciclo di clock della fase di produzione del
+campione, in cui l'output \code{o\_sample\_ready} assume il valore
+logico alto per indicare la presenza di un campione.
 
 \section{Difficoltà di implementazione e vincoli temporali}
 \label{sec:timing_impl}
 Nel corso dello sviluppo del progetto una dei problemi più difficili da affrontare
-è stato quello cdl rispetto dei vincoli temporali nell'implementazione dell'engine
+è stato quello del rispetto dei vincoli temporali nell'implementazione dell'engine
 del sintetizzatore.
 
-Inizialmente questo era stato implementato come un componente asincrono, dotato di 
-128 ingressi collegati alla LUT delle note attive, e 128 ingressi da \code{sample\_bits}
+Inizialmente questo era stato implementato come un componente asincrono dotato di 
+128 ingressi collegati alla LUT delle note attive e 128 ingressi da \code{sample\_bits},
 ciascuno collegati direttamente alla memoria dei campioni.
 In totale il componente aveva quindi $128+128*11 = 1536$ bit in ingresso, senza contare
 il sommatore e i multiplexer necessari alla selezione delle note.
 Data la complessità del componente, questo veniva sintetizzato con una lunga catena
 di sommatori a due ingressi collegati in cascata; tuttavia le catene di propagazione più lunghe
-non rispettavano i vincoli temporali, avendo un WNS fino a ???
+non rispettavano i vincoli temporali,e si otteneva un WNS di \SI{-1.684}{\nano\second}.
 
-Si è quindi convertito il mixer in un componene sincrono, che sommasse ogni campione
-ad un ciclo di clock; tuttavia anche in questo caso si ottenevano due path con WNS di ???
-
+Si è quindi convertito il mixer in un componene sincrono che sommasse ogni campione
+ad un ciclo di clock; tuttavia anche in questo caso si otteneva un WNS negativo pari
+a \SI{-0.738}{\nano\second}.
 Una soluzione si sarebbe potuta ottenere dilatando il tempo tra due operazioni di somma
 successive, impostando i parametri di progetti in modo da allentare i timing constraints
 su queste path.

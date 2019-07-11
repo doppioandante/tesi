@@ -1,69 +1,121 @@
-\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\DeclarePairedDelimiter\floor{\Big \lfloor}{\Big \rfloor}
 
 \chapter{Sintesi digitale del segnale}
-
-TODO: descrivere brevemente la catena del segnale con un grafico
-parlare di teorema di campionamento Nyquist?
-
-\section{Sintesi digital diretta}
+\section{Sintesi digitale diretta}
 La sintesi digitale diretta (Direct Digital Synthesis, Direct Digital Frequency Synthesis, DDS) permette di generare un segnale periodico di frequenza programmabile attraverso un sistema digitale.
 
-In termini formali, si vuole generare un segnale $x(t)$ periodico di periodo ??? di frequenza angolare (?) $2\pi f$, ampiezza tra -1 e 1??? fase iniziale nulla.
-..dire come si riconduce un segnale di periodo $T$ generico a un segnale
-periodico di periodo $2\pi f$ 
-Un sistema di DDS si compone di due blocchi: il \textbf{phase accumulator} (PA), responsabile di generare la fase del segnale a una determinata frequenza, e il \textbf{phase to amplitude convereter} (PAC), che a partire dalla fase ottiene l'ampiezza del segnale.
+Sia $x(\phi)$ un segnale periodico di periodo $2\pi$ e tale che $|x(\phi)| \le 1$.
+In termini formali, si vuole generare un segnale $s(t)=Ax(2\pi ft)$ periodico di periodo $T=\frac{1}{f}$, di ampiezza $A$, dove
+\begin{equation}
+\label{eq:phase}
+\phi(t) = 2\pi f t
+\end{equation}
+viene detta \textbf{fase} del segnale, ed è inizialmente nulla.
+
+Si noti che le ipotesi fatte sul segnale $x(\phi)$ non sono restrittive in quanto
+un qualsiasi segnale $y(z)$ periodico di periodio $T_y$ e tale che $|y(z)| \le y_{max}$ può
+essere ricondotto ad un segnale dello stesso tipo di $x$ operando la trasformazione
+\[
+x(\phi)=\frac{1}{y_{max}}y \Big ( \frac{T_y}{2\pi}\phi \Big )
+\]
+
+Un sistema di DDS si compone di due blocchi: il \textbf{phase accumulator} (PA), responsabile di generare la fase del segnale a una determinata frequenza, e il \textbf{phase to amplitude converter} (PAC) che, a partire dalla fase, ottiene l'ampiezza del segnale.
 
 In un sistema a campioni, il PAC si avvale di una ROM di $2^{\code{M}}$ parole contenente il segnale campionato a \code{b} bit.
-Altre tecniche possibili per generare i campioni sono algoritmiche (ad esempio l'algoritmo CORDIC per generare segnali sinusoidali) [TODO]
+Altri modi di implementare il PAC sono algoritmici, come ad esempio l'algoritmo CORDIC
+che viene impiegato per generare segnali di tipo sinusoidale.
 
-Il \textit{phase accumulator} è un registro a $\code{N}$ bit il cui valore rappresenta la frazione del periodo $[0, 2\pi]$ in notazione
+Il \textit{phase accumulator} è un registro a $\code{N}$ bit il cui valore rappresenta la frazione del periodo $[0, 2\pi]$ del segnale
+$x(\phi)$ in notazione
 fixed point. Ad ogni fronte di salita del clock il valore $\code{F}$ del registro viene incrementato di un valore pari alla \textit{frequency tuning word},
 sempre di $\code{N}$ bit, che è in relazione biunivoca con la frequenza $f$ desiderata.
 
-Si ricorda che la fase del segnale $x(t)$ al tempo $t$ è definita come
-\[
-\phi(t) = 2\pi f t
-\]
-
 Nella sintesi digitale, la fase al tempo $t$ si ottiene dal registro di fase secondo quando descritto prima:
-\[
-\phi = \frac{2\pi \code{F}}{2^\code{N}}
-\]
+\begin{equation}
+\label{eq:phasereg}
+\phi = 2\pi\frac{\code{F}}{2^\code{N}}
+\end{equation}
 
-Essendo \code{F} a precisione finita, si avrà un errore (TODO: basso) sulla precisione della fase del segnale.
+Essendo \code{F} a precisione finita, si avrà un errore sulla precisione della fase del segnale.
 
-Sommando la frequency tuning word al valore del registro di fase \code{F} si ottiene il nuovo valore \code{F'},
-e poiché l'addizione avviene ad ogni periodo di clock $T_{clk}$ i valori della fase del segnale corrispondenti sono
+Sommando la frequency tuning word al valore del registro di fase \code{F} si ottiene il nuovo valore \code{F'}
+e poiché l'addizione avviene ad ogni periodo di clock $T_{clk}$, i valori della fase del segnale corrispondenti sono
 $\phi(t)$ e $\phi(t + T_{clk})$.
-Si può quindi ricavare la \code{FTW} imponendo:
+Si può quindi ricavare la \code{FTW} utilizzando le
+\cref{eq:phase,eq:phasereg}, imponendo:
 \[
 \code{FTW} = \code{F'} - \code{F} = 
 \floor{\frac{2^\code{N}}{2\pi}\phi(t+T_{clk}) - \frac{2^\code{N}}{2\pi}\phi(t)}
 = \floor{2^\code{N} f T_{clk}} = \floor{2^\code{N} \frac{f}{f_{clk}}}
 \]
-
-Dove $\floor{\cdot}$ indica la parte intera.
-
+dove $\floor{\cdot}$ indica la parte intera. \\
 La frequenza effettiva $f_{o}$ del segnale risultante dalla DDS è dunque
-\[
+\begin{equation}
+\label{eq:actualphase}
 f_{o} = \frac{\phi(T_{clk}) - \phi(0)}{2\pi T_{clk}} = \frac{2\pi \code{FTW}}{2^\code{N} 2 \pi T_{clk}} = \frac{\code{FTW}}{2^N} f_{clk}
-\]
+\end{equation}
 in generale diversa dalla $f$ desiderata per via dell'errore di troncamento della fase.
+Tuttavia, scegliendo un numero di bit sufficiente per il registro di fase, si riesce
+ad ottenere una precisione molto elevata: usando la \cref{eq:actualphase}
+e imponendo $\code{FTW}=1$ e $N=32$, si ricava come risoluzione del registro di fase 
+un valore di circa $\SI{0.02}{\hertz}$.
 
-... non serve fase iniziale nulla: il registro contenente la ftw permette
-di avere fase iniziale non nulla. Parlare della precisione del 
-phase accumulator ...
-...dire secondo quali condizioni valgono le formule: ad es f minore fclock/2, k < p...
+In generale non è necessario che il segnale da rappresentare sia a fase
+iniziale nulla ed è facile rappresentare un segnale con uno sfasamento
+iniziale arbirario usando il registro di fase.
+Cambiando la FTW durante il processo di DDS è possibile cambiare
+quasi istantaneamente la frequenza del segnale, cosa invece difficile
+da ottenere con tecniche analogiche.
 
-...usare approssimazioni per stimare errore, magari grafico..
+Il registro di fase si può considerare come una versione quantizzata della
+fase reale del segnale $\phi(k T_{clk})$, a meno di multipli di $2\pi$.
+La fase è quindi un segnale avente la stessa frequenza $f$ rappresentata dalla frequency
+tuning word impiegata e campionato alla fequenza di clock, per cui vale il teorema
+del campionamento di Shannon:
+\[
+   2f < f_{clk} \implies f < \frac{f_{clk}}{2}
+\]
+È quindi impossibile generare segnali aventi frequenza maggiore della metà della
+frequenza di clock, condizione ampiamente rispettata per i segnali audio:
+l'udito umano è capace di percepire frequenza fino a circa $\SI{21}{\kilo\hertz}$, 
+per cui, dal teorema del campionamento, è necessaria una frequenza di campionamento $f_s$ di almeno $\SI{42000}{\hertz}$.
+Il PAC genera un nuovo valore alla frequenza di campionamento scelta, usando
+una ROM contenente i campioni, a partire dal valore del registro di fase.
 
-Il PAC genera un nuovo campione alla frequenza di campionamento $f_s$.
-L'udito umano è capace di percepire frequenza fino a circa $\SI{21}{\kilo\hertz}$, per cui è necessaria una frequenza di campionamento di almeno $\SI{42000}{\hertz}$.
+\section{Formato della ROM dei campioni}
+\label{sec:quantizationrom}
+La ROM viene generata quantizzando il segnale $Ax(\phi)$ nell'intervallo
+$[0, 2\pi]$ e $0 < A < 1$.
+Sebbene la precisione del registro di fase possa essere molto elevata, non è
+possibile quantizzare il segnale per ogni possibile valore del registro di fase:
+ad esempio, un registro di fase a 32 bit comporterebbe il campionamento di $2^{32}$ valori,
+e considerando una risoluzione di $11$ bit si dovrebbero impiegare $11\cdot2^{32}$bit,
+corrispondenti a \SI{5.5}{GiB}, che è una quantità di memoria proibitiva.
+Si campiona dunque il segnale $x(\phi)$ in $2^\code{M}$ punti, con $\code{M} < \code{N}$
+e si quantizza uniformemente con una precisione di $\code{b}$ bit.
+All'indirizzo di memoria $\code{I}$ si trova il campione corrispondente a
+$x(2\pi \frac{\code{I}}{2^\code{M}})$ il cui valore quantizzato $\code{Q}$ a $b$ bit è
+\begin{equation}
+\label{eq:quantization}
+\code{Q} = \floor{2^\code{b} Ax(2\pi \frac{\code{I}}{2^\code{M}})}
+\end{equation}
+I valori quantizzati vengono rappresentati in notazione binaria in complemento a due,
+permettendo così l'uso dell'aritmetica con segno nella fase di mixing del sintetizzatore.
+L'indirizzamento a partire dal registro di fase si ottiene prendeno i primi \code{M}
+bit del registro come indirizzo di memoria della ROM: si ha quindi un errore aggiuntivo
+nella DDS dovuto alla limitatezza della memoria dei campioni.
 
 \section{Conversione D/A attraverso PWM}
+\label{sec:dapwm}
 Per portare il segnale discreto generato attraverso la DDS al dominio analogico si fa uso di una tecnica di modulazione detta \textbf{pulse-width modulation} (PWM).
 
-Per comprendere il funzionamento della PWM si consideri un semplice esempio: si voglia rappresentare un segnale costante $x(t) \equiv x_0$ con $x_0 \in [0, x_{max}]$
+Per comprendere il funzionamento della PWM si consideri il caso in cui si voglia rappresentare un segnale costante $x(t) \equiv x_0$ con $x_0 \in [0, x_{max}]$.
+L'ipotesi di un segnale $x(t)$ positivo, sebbene non generale, è sufficiente
+a caratterizzare il segnale PWM processato dal filtro passa-basso della scheda
+Nexys, essendo questo un segnale a voltaggio maggiore o uguale a zero.
+Si dovrà quindi ricondurre il segnale campionato nella ROM, nel range $[-1,1]$,
+ad un segnale nel range $[0,x_{max}]$ con opportune operazioni di scala e
+traslazione.
 
 Sia quindi $x_{pwm}(t)$ un'onda quadra di ampiezza $x_{max}$, di periodo $T$ e di duty cycle $d=\frac{x0}{x_{max}}$, $d \le 1$:
 \[
@@ -72,16 +124,17 @@ x_{pwm}(t) = \begin{cases}
 	0 & \text{se}\ (k+d)T \le t < (k+1)T
 \end{cases}
 \] 
-con $k \in Z$
+con $k$ intero.
 
-È noto che questo segnale è sviluppabile in serie di Fourier come: ...
-
-In particolare, il coefficiente $a_0$ è pari alla media del segnale sul periodo, ossia
+Questo segnale è sviluppabile in serie di Fourier, ed essendo un'onda quadra
+conterrà i multipli dispari dell'armonica fondamentale di frequenza $\frac{2\pi}{T}$.
+Il coefficiente $a_0$ della serie è inoltre pari alla media del segnale sul periodo, ossia
 \[
 a_0 = x_{max} \cdot d = x_0
 \]
 
-È possibile quindi ricostruire il segnale $x(t)\equiv x_0$ a partire da $x_{pwm}(t)$ passandolo attraverso un filtro passa-basso che rimuova tutte le armoniche diverse da $a_0$.
+È possibile quindi ricostruire il segnale $x(t)\equiv x_0$ a partire da $x_{pwm}(t)$ passandolo attraverso un filtro passa-basso che rimuova tutte le armoniche di frequenza
+più alta di $a_0$.
 
 Nel caso in esame $x(t)$ non sarà costante, ma sarà variabile e rappresenterà la forma d'onda generata dal sistema di sintesi digitale diretta.
 

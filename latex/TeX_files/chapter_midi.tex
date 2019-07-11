@@ -2,11 +2,11 @@
 \label{chap:midi}
 
 \section{Il protocollo di comunicazione e i messaggi MIDI}
-Nel protocollo MIDI le informazioni e gli eventi vengono trasmessi sotto forma di \textit{messaggi}.
-Ogni messaggio è composto da una sequenza di byte ordinata, di cui il primo è detto \textit{status byte} e i successivi
+Nel protocollo MIDI\cite{midispec} le informazioni e gli eventi vengono trasmessi sotto forma di \textit{messaggi}.
+Ogni messaggio è composto da una sequenza di byte ordinata di cui il primo è detto \textit{status byte} e i successivi
 vengono detti \textit{data byte}.
-Per riconoscere gli status byte dai data byte si impone che il bit più significativo degli status byte sia sempre 1, mentre quello dei data byte sia 0,
-mentre i rimanenti 7 bit possono rappresentare valori da da 0 a 127.
+Per riconoscere gli status byte dai data byte si impone che il bit più significativo degli status byte sia sempre 1, quello dei data byte sia 0 e
+i rimanenti 7 bit possono rappresentare valori da da 0 a 127.
 I primi 4 bit dello status byte identificano il tipo di messaggio MIDI, mentre gli ultimi 4 specificano il canale su cui il messaggio ha effetto,
 per un massimo possibile di 16 canali.
 
@@ -27,19 +27,19 @@ sull'intensità con cui la nota viene suonata. Il suo status byte è del tipo
 \textit{1001xxxx} dove \textit{xxxx} sta ad indicare il canale del
 messaggio.
 Il messaggio note off è analogo e viene trasmesso quando si vuole
-interrompere la riproduzione di una certa nota, e il suo status byte
+interrompere la riproduzione di una certa nota e il suo status byte
 ha il formato \textit{1000xxxx}.
 Un altro modo di interrompere la nota (citare standard) è quello di mandare
 un messaggio \textit{note on} con \textit{velocity} impostata a zero.
 
 \section{Physical Layer}
-I messaggi MIDI vengono trasmessi in maniera seriale e vengono ricostruiti da un convertitore seriale/parallelo detto \textit{UART}(Universal Asynchronous Receiver-Transmitter).
+I messaggi MIDI vengono trasmessi in maniera seriale e vengono ricostruiti da un convertitore seriale/parallelo detto \textit{UART} (Universal Asynchronous Receiver-Transmitter).
 La comunicazione MIDI segue il protocollo RS-232 e funziona nel seguente modo:
 \begin{itemize}
-	\item In assenza di comunicazione, la linea dati viene mantenuta al valore logico alto
-	\item Per compiere una trasmissione, il trasmettitore porta la linea dati al valore logico basso per la durata $T_{bit}$, e questo valore prende il nome di \textbf{start bit}.
+	\item In assenza di comunicazione, la linea dati viene mantenuta al valore logico alto.
+	\item Per iniziare una trasmissione, il trasmettitore porta la linea dati al valore logico basso per la durata $T_{bit}$, e questo valore prende il nome di \textbf{start bit}.
 	\item I bit da trasmettere vengono inviati in sequenza, in ordine dal bit meno significativo al più significativo; ad ogni bit corrisponde il valore logico alto o basso sulla linea dati per il periodo $T_{bit}$
-	\item Alla fine di tramissione la linea dati viene portata al valore logico alto per un tempo di almeno $T_{bit}$, cioè si invia uno \textbf{stop bit}.
+	\item Alla fine della tramissione la linea dati viene portata al valore logico alto per un tempo di almeno $T_{bit}$, cioè si invia uno \textbf{stop bit}.
 \end{itemize}
 Il tempo $T_{bit} = \frac{1}{f_{bit}}$ è definito nello standard MIDI imponendo la frequenza di bit a $f_{bit} = \SI{31250}{\hertz}$, detta anche
 \textit{baud rate}.
@@ -51,12 +51,17 @@ Il valore logico basso corrisponde all'assenza di corrente.
 
 \section{Il connettore MIDI}
 La prima specifica MIDI prevedeva un connettore DIN a 5 pin, 
-con un cavo di lunghezza massima di ???, usato per trasmettere
+con un cavo di lunghezza massima di circa \SI{15}{\meter} usato per trasmettere
 la corrente relativa al bit trasmesso.
 Sebbene ancora supportato, questo tipo di connettore fisico è stato
 soppiantato con l'avvento del protocollo USB e del relativo connettore,
-universalmente supportato dai moderni sintetizzatore come mezzo fisico
+universalmente supportato dai moderni sintetizzatori come mezzo fisico
 di trasmissione per i messaggi MIDI.
+
+In questo progetto non si fa utilizzo del connettore MIDI, che dovrebbe essere
+interfacciato con un circuito alla scheda; il testing è stato dunque condotto
+solamente attraverso l'utilizzo di un computer che comunicasse con la scheda
+attraverso la porta USB seriale.
 
 \section{Il MIDI tuning standard}
 Ad ogni \textit{note number} del protocollo MIDI viene associata una frequenza determinata dal MIDI tuning standard (MTS).

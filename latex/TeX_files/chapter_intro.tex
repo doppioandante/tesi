@@ -1,25 +1,50 @@
-\chapter{Descrizione e funzionamento di un sintetizzatore musicale}
-Un sintetizzatore musicale permette la riproduzione di suoni di carattere, intensità e frequenza impostabili dal musicista.
-L'utilizzo dei sintetizzatori come strumento, sia in studio che dal vivo, si afferma negli anni settanta grazie all'invenzione del \textit{Minimoog}, meno costoso e voluminoso dei sintetizzari a muro degli anni sessanta.
+\chapter{Introduzione}
+Lo scopo di questa tesi è di descrivere la realizzazione di un sintetizzatore
+musicale implementato su una scheda Nexys 4 DDR della Digilent.
+La particolarità di quest'ultima è la presenza, al suo interno, di una FPGA,
+un circuito programmabile molto diverso da un convenzionale microprocessore
+o microcontrollore.
+Una FPGA, infatti, si programma con linguaggi di descrizione dell'hardware (HDL)
+che descrivono la struttura e il funzionamento di un circuito digitale.
+Il sintetizzatore presenta le seguenti caratteristiche:
+\begin{itemize}
+   \item polifonia
+   \item sintesi basata su wavetable (forma d'onda campionata)
+   \item supporto del protocollo MIDI
+   \item audio monofonico
+\end{itemize}
+
+Oltre all'architettura realizzata, vengono discusse in questo lavoro la teoria
+dietro alla sintesi digitale del segnale sonoro e della PWM utilizzata
+per pilotare l'uscita audio.
+Infine si dà una caratterizzazione delle performance del sintetizzatore in termini
+di signal-to-noise ratio.
+
+\section{Descrizione di un sintetizzatore musicale}
+Un sintetizzatore musicale permette la riproduzione di suoni di carattere, intensità e frequenza controllabili dal musicista.
+L'utilizzo dei sintetizzatori come strumento, sia in studio che dal vivo, si afferma negli anni settanta grazie all'invenzione del \textit{Minimoog}, meno costoso e voluminoso dei sintetizzatori a muro degli anni sessanta.
 Il \textit{Minimoog} era un sintetizzatore analogico e monofonico, cioè capace di riprodurre solamente una nota alla volta, al contrario dei moderni sintetizzatori detti \textit{polifonici}.
-Al giorno d'oggi i sintetizzatori sono per la maggior parte implementati in maniera digitale, e permettono l'utilizzo di una varietà di tecniche di sintesi del suono.
-In questa tesi ci occuperemo di un semplice sintetizzatore polifonico, capace di riprodurre forme d'onda campionate e controllabile attraverso il protocollo MIDI, ampiamente diffuso nell'industria musicale.
-Il progetto è stato implementato sulla scheda Nexys 4 DDR della Digilent, dotata di un FPGA, di una porta seriale usata per il testing, e di un uscita mini-jack monofonica.
+Al giorno d'oggi i sintetizzatori sono per la maggior parte implementati in maniera digitale e permettono l'utilizzo di una varietà di tecniche di sintesi del suono.
+In questa tesi ci si occuperà di un semplice sintetizzatore polifonico, capace di riprodurre forme d'onda campionate e controllabile attraverso il protocollo MIDI, ampiamente diffuso nell'industria musicale.
+La scheda Nexys 4 DDR utilizzata per il progetto è dotata di una porta seriale usata per comandare il sintetizzatore
+ e di un uscita mini-jack monofonica.
 
 \section{La catena del segnale del sintetizzatore}
-L'input di un sintetizzatore viene dato dal musicista, attraverso uno strumento fisico. Lo strumento invia al sintetizzatore un segnale di controllo che specifica quali note suonare, a che intensità, quali sono i parametri dello strumento ecc. A tale scopo è universalmente impiegato lo standard MIDI, che specifica sia il protocollo di comunicazione che le caratteristiche elettriche della connessione fisica.
+L'input di un sintetizzatore viene dato dal musicista attraverso uno
+strumento fisico. Lo strumento invia al sintetizzatore un segnale di
+controllo che specifica quali note suonare, a che intensità, quali sono
+i parametri dello strumento, ecc. A tale scopo è universalmente impiegato
+lo standard MIDI, che specifica sia il protocollo di comunicazione che
+le caratteristiche elettriche della connessione fisica.
 Il sintetizzatore si occuperà di riprodurre i suoni desiderati. Due caratteristiche fondamentali del suono riprodotto sono la sua frequenza e il suo timbro. Per variare queste due componenti sono disponibili una varietà di tecniche.
 In questo progetto ci si avvale della \textit{Direct Digital Frequency Synthesis} per la generazione di una frequenza determinata, mentre si farà uso di una ROM contenente la forma d'onda campionata per ottenere il timbro desiderato.
 La riproduzione di più note contemporanamente si ottiene attraverso una fase di \textit{mixing}, per cui le forme d'onda delle note desiderate vengono sovrapposte.
 Essendo la sintesi di tipo digitale, alla fine della catena è presente un convertitore digitale-analogico,
 seguito da un connettore fisico.
 
-(aggiungere figura)
-
-(fare sottoparagrafo di titolo delay?)
 Il tempo che intercorre tra la sollecitazione dello strumento e l'emissione del suono corrispondente viene chiamato ritardo di propagazione o \textit{delay}.
 Il feedback uditivo è essenziale ai fini di una performance musicale, per cui il ritardo introdotto dal sintetizzatore
 dovrebbe essere il più basso possibile, con un limite indicativo di \SI{5}{\milli\second}.
-Allo stesso tempo, il tempo di ritardo non può essere inferiore al tempo di produzione di un campione (??? va spiegato meglio il funzionamento del sintetizzatore prima di poterne parlare).
-^^ spostare in capitolo su generazione del segnale
+Data la bassa complessità del sintetizzatore realizzato, il tempo di elaborazione
+del segnale MIDI di ingresso fino alla produzione del suono è trascurabile.
 

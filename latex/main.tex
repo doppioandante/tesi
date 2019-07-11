@@ -12,6 +12,8 @@
 \usepackage{minted}
 \usepackage{tabu}
 \usepackage{cleveref}
+\usepackage{float}
+\usepackage{cite}
 \usetikzlibrary{matrix, positioning, arrows.meta}
 \newlength{\myheight}
 \setlength{\myheight}{2.5cm}
@@ -45,6 +47,22 @@
 
 \frontmatter
 \maketitle
+
+\chapter*{Abstract}
+Il successo dei sintetizzatori in ambito musicale dagli anni 70 in poi è
+è stato determinante per l'industria musicale. Grazie alla loro versatilità
+i sintetizzatori permettono di riprodurre svariati suoni, spesso
+programmabili dal musicista, e ampliano enormemente le possibilità espressive.
+Con l'avvento dell'elettronica digitale quasi tutti i sintetizzatori in
+commercio hanno cominciato a fare uso di tecniche di sintesi digitale e
+dei microprocessori.
+In questa tesi ci si propone di realizzare un semplice sintetizzatore 
+digitale polifonico e con sintesi a wavetable, comandabile attraverso
+il protocollo MIDI.
+Per la realizzazione del sintetizzatore si farà uso di una scheda
+Nexys4 DDR, contenente una FPGA Xilinx Artix 7, un dispositivo programmabile
+molto diverso da un convenzionale processore e programmato attraverso
+il linguaggio di descrizione dell'hardware VHDL.
 \tableofcontents
 
 \mainmatter
@@ -54,7 +72,6 @@
 \include{./TeX_files/chapter_dds_pwm}
 \include{./TeX_files/chapter_architecture}
 \include{./TeX_files/chapter_analisi}
-\include{./TeX_files/chapter_conclusione}
 \include{./TeX_files/bibliography}
 
 \backmatter
