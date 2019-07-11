@@ -49,7 +49,7 @@ la riprogrammabilità (anche una volta integrato nel progetto), che
 è invece impossibile con un circuito integrato specifico. 
 Un altro uso che si va affermando negli ultimi anni è l'utilizzo dei
 FPGA come acceleratori software, ad esempio per applicazioni di 
-trading finanziaro e intelligenza artificiale. (citare?)
+trading finanziaro e intelligenza artificiale.
 
 \subsection{Struttura di un FPGA}
 Una FPGA ha una struttura regolare e contiene:
@@ -63,19 +63,19 @@ Una FPGA ha una struttura regolare e contiene:
           di ingressi e più complesse
 \end{itemize}
 
-Oltre a queste due componenti fondamentali, un FPGA contiente altri
+Oltre a queste due componenti fondamentali, una FPGA contiente altri
 componenti necessari al suo funzionamento e interfacciamento con
 circuiti esterni.
-Il FPGA utilizzato dalla scheda Nexys 4 DDR è uno Xilinx Artix 7 XC7A100T
+L'FPGA utilizzato dalla scheda Nexys 4 DDR è uno Xilinx Artix 7 XC7A100T
 e contiene svariati blocchi\cite{artix7overview}, tra cui:
 
 \begin{itemize}
     \item \textbf{I/O blocks}: blocchi di input e output,
-           permettono al FPGA di interfacciarsi con l'esterno
+           permettono alla FPGA di interfacciarsi con l'esterno
     \item \textbf{DSP blocks}: blocchi che rendono più efficiente in termini
            di risorse l'implementazione di sommatori e moltiplicatori
     \item \textbf{Memory blocks}: è possibile trovare anche blocchi di
-           memoria all'interno di un FPGA
+           memoria all'interno di una FPGA
     \item \textbf{Clock Management Tiles}: oltre a contenere la circuiteria
             necessaria per la gestione e propagazione del segnale di clock,
             permettono operazioni avanzate sul segnale di clock come la
@@ -104,7 +104,7 @@ dell'operazione, configurabile sia come flip-flop che come latch.
 del carry formano uno logic slice.
 Due slice combinati formano quindi un CLB nella sua interezza.
 
-\begin{figure}[hb]
+\begin{figure}[H]
 	\centering
 	\def\svgwidth{\columnwidth}
 	\includegraphics[width=0.8\columnwidth]{TeX_files/CLB.png}
@@ -113,7 +113,7 @@ Due slice combinati formano quindi un CLB nella sua interezza.
 \end{figure}
 
 \section{Programmazione di un FPGA}
-La programmazione di un FPGA avviene a livello fisico attraverso
+La programmazione di una FPGA avviene a livello fisico attraverso
 la scrittura di una SRAM che indica come vanno configurati i blocchi
 logici e le interconnessioni presenti nell'IC.
 
@@ -121,8 +121,7 @@ A livello di sviluppo si utilizzano linguaggi di descrizione dell'hardware
 (HDL) come VHDL e Verilog, che nascondono in gran parte la complessità
 dell'FPGA.
 
-Il codice sorgente viene processato da un programma di sintesi che compie
-all'incirca le seguenti operazioni:
+Il codice sorgente viene processato da un programma di sintesi che compie le seguenti operazioni:
 
 \begin{itemize}
     \item \textbf{Creazione del netlist}: il codice viene convertito in una
@@ -133,7 +132,7 @@ all'incirca le seguenti operazioni:
           componenti della FPGA
     \item \textbf{Bitstream Generation}: Il risultato del Place and Route viene
           convertito in una serie di bit che vengono poi scritti sulla SRAM
-          del FPGA in fase di programmazione
+          della FPGA in fase di programmazione
 \end{itemize}
 
 \section{Vincoli temporali}
@@ -141,7 +140,7 @@ In fase di progetto e di sviluppo il design può essere simulato e analizzato
 ben prima di passare alla programmazione della scheda.
 Un passo particolarmente importante è l'analisi dei tempi di propagazione:
 successivamente al place and route, è possibile calcolare il tempo di propagazione
-del segnale attraverso i circuiti del FPGA. Nel caso in cui siano presenti
+del segnale attraverso i circuiti della FPGA. Nel caso in cui siano presenti
 delle route con un tempo di propagazione troppo lungo, sarà necessario
 intervenire a livello del design o addirittura manualmente nel posizionamento
 dei blocchi sulla FPGA.

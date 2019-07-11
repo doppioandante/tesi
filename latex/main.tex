@@ -1,5 +1,6 @@
 % !TeX spellcheck = it_IT
-\documentclass[italian,a4paper,12pt]{book}
+\documentclass[italian,11pt,a4paper,twoside,openright]{book}
+\usepackage[lmargin=142pt,rmargin=95pt,tmargin=127pt,bmargin=123pt]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{siunitx}
@@ -14,6 +15,16 @@
 \usepackage{cleveref}
 \usepackage{float}
 \usepackage{cite}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{setspace} % for \setstretch
+\usepackage[T1]{fontenc}
+\usepackage{lmodern} % \scshape
+\usepackage{titling} % \thetitle
+
+
+\setlist[itemize]{noitemsep, topsep=5pt, leftmargin=*}
+	
 \usetikzlibrary{matrix, positioning, arrows.meta}
 \newlength{\myheight}
 \setlength{\myheight}{2.5cm}
@@ -23,16 +34,61 @@
 }
 
 
+\newcommand{\code}[1]{\texttt{#1}} 
+
+% Some definitions.
+\def\advisor#1{\gdef\@advisor{#1}}
+\def\mastername#1{\gdef\@mastername{#1}}
+\def\coadvisorOne#1{\gdef\@coadvisorOne{#1}}
+\def\coadvisorOneUniversity#1{\gdef\@coadvisorOneUniversity{#1}}
+\def\coadvisorTwo#1{\gdef\@coadvisorTwo{#1}}
+\def\committeeInternal#1{\gdef\@committeeInternal{#1}}
+\def\committeeInternalOne#1{\gdef\@committeeInternalOne{#1}}
+\def\committeeInternalTwo#1{\gdef\@committeeInternalTwo{#1}}
+\def\committeeExternal#1{\gdef\@committeeExternal{#1}}
+\def\degreeyear#1{\gdef\@degreeyear{#1}}
+\def\degreemonth#1{\gdef\@degreemonth{#1}}
+\def\degreeterm#1{\gdef\@degreeterm{#1}}
+\def\degree#1{\gdef\@degree{#1}}
+\def\department#1{\gdef\@department{#1}}
+\def\field#1{\gdef\@field{#1}}
+\def\university#1{\gdef\@university{#1}}
+\def\universitycity#1{\gdef\@universitycity{#1}}
+\def\universitystate#1{\gdef\@universitystate{#1}}
+\def\programname#1{\gdef\@programname{#1}}
+\def\pdOneName#1{\gdef\@pdOneName{#1}}
+\def\pdOneSchool#1{\gdef\@pdOneSchool{#1}}
+\def\pdOneYear#1{\gdef\@pdOneYear{#1}}
+\def\pdTwoName#1{\gdef\@pdTwoName{#1}}
+\def\pdTwoSchool#1{\gdef\@pdTwoSchool{#1}}
+\def\pdTwoYear#1{\gdef\@pdTwoYear{#1}}
+% School name and location
+\university{University of Padova}
+\universitycity{Padova}
+\universitystate{Italy}
+
+% School color found from university's graphic identity site:
+% http://www.nyu.edu/employees/resources-and-services/media-and-communications/styleguide.html
+\definecolor{SchoolColor}{rgb}{0.71, 0, 0.106} % UNIPD red
+\definecolor{chaptergrey}{rgb}{0.61, 0, 0.09} % dialed back a little
+\definecolor{midgrey}{rgb}{0.4, 0.4, 0.4}
+
 \hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,      
-    urlcolor=cyan,
-    pdftitle={Implementazione di un sintetizzatore musicale su scheda Nexys4 DDR},
-    bookmarks=true,
+	colorlinks,
+	citecolor=SchoolColor,
+	filecolor=black,
+	linkcolor=black,
+	urlcolor=SchoolColor,
+	pdftitle={Implementazione di un sintetizzatore musicale su scheda Nexys4 DDR}
 }
 
-\newcommand{\code}[1]{\texttt{#1}} 
+
+\renewcommand{\frontmatter}{
+	\pagenumbering{roman}
+	\maketitle
+	\frontispiece
+	\clearpage
+}
 
 \begin{document}
 
@@ -43,11 +99,59 @@
 %\title{Audio Synthesis on the Nexys 4 DDr FPGA board}
 %\title{Implementazione di un sintetizzatore MIDI digitale su scheda FPGA Nexys 4 DDR}
 %\title{Implementation of a MIDI synthesizer on the Nexys 4 DDR FPGA board}
+\advisor{Daniele Vogrig}
+\mastername{Ingegneria dell'Informazione}
 \date{15 Luglio 2019}
 
-\frontmatter
-\maketitle
 
+\thispagestyle{empty}
+\begin{center}
+	\vbox to0pt{\vbox to\textheight{\vfill \includegraphics[width=11.5cm]{resources/unipd-light} \vfill}\vss}
+	%\vspace*{\fill}
+	\begin{figure}
+		\centering
+		\includegraphics[height=2.5cm]{resources/unipd-bn}
+	\end{figure}
+	
+	\setstretch{1.5}
+	
+	\scshape{\Large{\bfseries{Università degli Studi di Padova}}} \\
+	\line(1, 0){400} \\
+	\scshape{\large{Dipartimento di ingegneria dell'informazione}} \\
+	
+	\vspace{5pt}
+	\small{\textit{Tesi di laurea in}}
+	\@mastername
+	
+	\setstretch{3}
+	
+	\vspace{40pt}
+	\scshape{\LARGE{\bfseries{\textcolor{SchoolColor}{\thetitle}}}} \normalsize \\
+	\vspace{25pt}
+	\vspace{15pt}
+	\scshape{Anno Accademico 2018/19} \\
+	\scshape{15 Luglio 2019}
+	\setstretch{1.2}
+	
+	\vfill
+	\begin{normalsize}
+		\begin{flushleft}
+			\textit{Relatore} \hfill \textit{Candidato}\\
+			\vspace{1pt}
+			Daniele Vogrig \hfill Enrico Lumetti\\
+			Università di Padova \\
+			\vspace{6pt}
+			
+		\end{flushleft}
+	\end{normalsize}
+	
+\end{center}
+\vspace*{\fill}
+\singlespacing
+\pagenumbering{gobble} 
+\cleardoublepage
+
+\pagenumbering{roman}
 \chapter*{Abstract}
 Il successo dei sintetizzatori in ambito musicale dagli anni 70 in poi è
 è stato determinante per l'industria musicale. Grazie alla loro versatilità
@@ -63,8 +167,8 @@ Per la realizzazione del sintetizzatore si farà uso di una scheda
 Nexys4 DDR, contenente una FPGA Xilinx Artix 7, un dispositivo programmabile
 molto diverso da un convenzionale processore e programmato attraverso
 il linguaggio di descrizione dell'hardware VHDL.
-\tableofcontents
 
+\tableofcontents
 \mainmatter
 \include{./TeX_files/chapter_intro}
 \include{./TeX_files/chapter_midi}

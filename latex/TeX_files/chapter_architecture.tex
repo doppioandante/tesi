@@ -84,21 +84,21 @@ nomi all'interno del progetto VHDL.
 I seguenti blocchi fondamentali corrispondono in VHDL al costrutto di \textit{entity} e veranno analizzati dettagliatamente in seguito:
 
 \begin{itemize}
-    \item \hyperref[sec:counter]{counter\_impulse\_generator} Un contatore con frequenza di reset variabile, viene
+    \item \hyperref[sec:counter]{\code{counter\_impulse\_generator}} Un contatore con frequenza di reset variabile, viene
     usato principalmente per la sincronizzazione temporale tra diversi componenti
-    \item \hyperref[sec:lowhigh]{low\_to\_high\_detector} Componente ausiliario che trasforma la variazione
+    \item \hyperref[sec:lowhigh]{\code{low\_to\_high\_detector}} Componente ausiliario che trasforma la variazione
     del segnale in ingresso dal valore logico basso a quello alto in un impulso della durata di un ciclo
     di clock
-    \item \hyperref[sec:uart]{uart} Si occupa della ricezione seriale a 31250 baud secondo le specifiche MIDI
-    \item \hyperref[sec:mididec]{midi\_decoder}  State machine che codifica i byte ricevuti dal blocco uart in eventi MIDI; gestisce solamente gli eventi note on/off
+    \item \hyperref[sec:uart]{\code{uart}} Si occupa della ricezione seriale a 31250 baud secondo le specifiche MIDI
+    \item \hyperref[sec:mididec]{\code{midi\_decoder}}  State machine che codifica i byte ricevuti dal blocco uart in eventi MIDI; gestisce solamente gli eventi note on/off
     mentre scarta tutti gli altri eventi MIDI.
-    \item \hyperref[sec:noteslut]{active\_notes\_lut} Tabella di lookup contenente 128 valori booleani che indicano l'attivazione di una nota
-    \item \hyperref[sec:phaseaccumulator]{phase\_accumulator} Opera l'accumulazione di fase per la DDS
-    \item \hyperref[sec:pwmencoder]{pwm\_encoder} Genera la modulazione PWM corrispondente in uscita
+    \item \hyperref[sec:noteslut]{\code{active\_notes\_lut}} Tabella di lookup contenente 128 valori booleani che indicano l'attivazione di una nota
+    \item \hyperref[sec:phaseaccumulator]{\code{phase\_accumulator}} Opera l'accumulazione di fase per la DDS
+    \item \hyperref[sec:pwmencoder]{\code{pwm\_encoder}} Genera la modulazione PWM corrispondente in uscita
     a partire da un campione fornito in entrata
     \item \hyperref[sec:rom]{rom} Package generico che rappresenta una read-only memory.
-    \item \hyperref[sec:synthengine]{synth\_engine} Cuore del sintetizzatore, provvede alla DDS a partire dai valori presenti in active\_notes\_lut, alla phase-to-amplitude conversion attraverso una ROM e al mixing.
-    \item synth\_top Entità top del progetto, cioè che contiene tutte le altre entity e le istanzia nel modo corretto, impostando le frequenze di lavoro dei componenti.
+    \item \hyperref[sec:synthengine]{\code{synth\_engine}} Cuore del sintetizzatore, provvede alla DDS a partire dai valori presenti in active\_notes\_lut, alla phase-to-amplitude conversion attraverso una ROM e al mixing.
+    \item \code{synth\_top} Entità top del progetto, cioè che contiene tutte le altre entity e le istanzia nel modo corretto, impostando le frequenze di lavoro dei componenti.
 \end{itemize}
 
 \section{Contatore Generico}
@@ -237,7 +237,7 @@ Il \code{pwm\_encoder} funziona nel seguente modo: all'interno dell'entity
 è istanziato un registro contatore che viene incrementato ad ogni ciclo di clock
 e ritorna nullo dopo $K$ cicli di clock, dove
 \[
-  K = \floor{\frac{T_s}{T_{clk}}} = 2048
+  K = \floor*{\frac{T_s}{T_{clk}}} = 2048
 \]
 uguale ai $2^b$ possibili valori che può assumere un campione.
 Si ha quindi
@@ -274,7 +274,7 @@ ricostruito dal filtro in base a quanto detto nella \cref{sec:quantizationrom}.
 	\centering
 	\def\svgwidth{\columnwidth}
 	\includegraphics[width=0.7\columnwidth]{TeX_files/pwm_ramp.eps}
-	\caption{Esempio di PWM: nel grafico sopra è riportato il valore del campione $s(kT_s)$ (tratteggio blu), che viene comparato al contatore.
+	\caption{Esempio di PWM: nel grafico sopra è riportato il valore del campione $s(kT_s)$ - tratteggiato in blu - che viene comparato al contatore.
 	Quando il contatore supera il valore di $s(kT_s)$, \code{o\_pwm\_signal} passa da $x_{max}$ a $0$. }
 \end{figure}
 
@@ -389,14 +389,14 @@ logico alto per indicare la presenza di un campione.
 
 \section{Difficoltà di implementazione e vincoli temporali}
 \label{sec:timing_impl}
-Nel corso dello sviluppo del progetto una dei problemi più difficili da affrontare
+Nel corso dello sviluppo del progetto uno dei problemi più difficili da affrontare
 è stato quello del rispetto dei vincoli temporali nell'implementazione dell'engine
 del sintetizzatore.
 
 Inizialmente questo era stato implementato come un componente asincrono dotato di 
 128 ingressi collegati alla LUT delle note attive e 128 ingressi da \code{sample\_bits},
 ciascuno collegati direttamente alla memoria dei campioni.
-In totale il componente aveva quindi $128+128*11 = 1536$ bit in ingresso, senza contare
+In totale il componente aveva quindi $128+128\cdot11 = 1536$ bit in ingresso, senza contare
 il sommatore e i multiplexer necessari alla selezione delle note.
 Data la complessità del componente, questo veniva sintetizzato con una lunga catena
 di sommatori a due ingressi collegati in cascata; tuttavia le catene di propagazione più lunghe
