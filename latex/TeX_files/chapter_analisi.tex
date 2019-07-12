@@ -147,12 +147,6 @@ omessa in quanto complessa dal punto di vista matematico.
 
 La riduzione di SNR dovuta alla DDS è stata calcolata, attraverso le simulazioni,
 per ogni possibile valore del \textit{note number} ed è riportata in \cref{fig:confronto}.
-
-Per $\code{N}=32$ l'SNR decresce fino a circa $\SI{47}{\decibel}$ per alcune
-frequency tuning words. Usando una precisione maggiore per il registro di fase
-si riesce ad ottenere un SNR al minimo di \SI{58.8}{\decibel}, molto vicino a quello di sola quantizzazione.
-
-
 \begin{figure}[H]
     \begin{minipage}{0.59\columnwidth}
             \centering
@@ -165,6 +159,10 @@ si riesce ad ottenere un SNR al minimo di \SI{58.8}{\decibel}, molto vicino a qu
     \caption{Confronto dell'SNR dovuto alla DDS con due grandezze diverse del registro di fase.}
     \label{fig:confronto}
 \end{figure}
+
+Per $\code{N}=32$ l'SNR decresce fino a circa $\SI{47}{\decibel}$ per alcune
+frequency tuning words. Usando una precisione maggiore per il registro di fase
+si riesce ad ottenere un SNR al minimo di \SI{58.8}{\decibel}, molto vicino a quello di sola quantizzazione.
 
 \section{Considerazioni finali}
 Il sintetizzatore progettato, sebbene funzionante, presenta performance

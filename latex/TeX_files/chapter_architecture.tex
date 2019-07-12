@@ -324,9 +324,6 @@ tuning word corrispondenti ad ogni possibile nota suonata.
 Attraverso il costrutto \code{for .. generate} vengono generati 128 accumulatori di fase indipendenti. Ad ognuno di questi viene accoppiata
 una entity che ne esegue il reset quando una nota passa dal valore logico basso a quello alto nella LUT
 (si noti l'utilizzo del componente \hyperref[sec:lowhigh]{\code{low\_to\_high\_detector}}).
-
-\pagebreak
-
 \begin{minted}{VHDL}
 oscillators:
 for i in 0 to MAX_MIDI_NOTE_NUMBER generate
@@ -374,7 +371,7 @@ precedente.
 	\def\svgwidth{\columnwidth}
 	\includegraphics[width=\columnwidth]{TeX_files/synth_engine.eps}
 	\caption{Architettura con pipeline a due stadi. Ogni multiplexer
-	 in uscita ad un NCO controlla se la nota è attiva nella LUT; il
+	 in uscita ad un phase accumulator (PA) controlla se la nota è attiva nella LUT; il
      multiplexer principale, comandato da un contatore, carica la pipeline
      con un nuovo campione. Seguono poi lo stadio di PAC (ossia il caricamento del campione dalla ROM) e il mixing.}
 \end{figure}

@@ -36,7 +36,7 @@ in frequenza è rappresentata nella \cref{fig:freq_resp}
 \end{figure}
 
 \section{FPGA}
-Un Field-programmable Gate Array (FPGA) è un circuito digitale integrato
+Una Field-programmable Gate Array (FPGA) è un circuito digitale integrato
 capace di implementare le più svariate funzioni in modo programmatico:
 può essere utilizzato per la fase di prototipazione di Application-specific
 Integrated Circuits (ASIC), oppure per sostituirli nel caso in cui i costi
@@ -93,6 +93,13 @@ data la presenza di molti sommatori all'interno del design,
 sintesi per memorizzare sia la forma d'onda campionata che
 le frequency tuning words impiegate nella digital direct synthesis.
 
+\begin{figure}[H]
+	\centering
+	\def\svgwidth{\columnwidth}
+	\includegraphics[width=0.8\columnwidth]{TeX_files/CLB.png}
+    \caption{Struttura gerarchica di una FPGA: a sinistra l'insieme di più CLB,
+    a destra la struttura di un singolo logic element}
+\end{figure}
 \subsection{Struttura di un CLB}
 Il CLB è la macrostruttura fondamentale di una FPGA.
 I circuiti elementari all'interno di un CLB sono i logic elements, che implementano
@@ -103,14 +110,6 @@ dell'operazione, configurabile sia come flip-flop che come latch.
  Quattro logic elements, insieme a dei multiplexer e alla catena
 del carry formano uno logic slice.
 Due slice combinati formano quindi un CLB nella sua interezza.
-
-\begin{figure}[H]
-	\centering
-	\def\svgwidth{\columnwidth}
-	\includegraphics[width=0.8\columnwidth]{TeX_files/CLB.png}
-    \caption{Struttura gerarchica di una FPGA: a sinistra l'insieme di più CLB,
-    a destra la struttura di un singolo logic element}
-\end{figure}
 
 \section{Programmazione di un FPGA}
 La programmazione di una FPGA avviene a livello fisico attraverso

@@ -21,6 +21,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern} % \scshape
 \usepackage{titling} % \thetitle
+%\usepackage[nottoc,numbib]{tocbibind} % biblio in index
 
 
 \setlist[itemize]{noitemsep, topsep=5pt, leftmargin=*}
@@ -120,7 +121,7 @@
 	\scshape{\large{Dipartimento di ingegneria dell'informazione}} \\
 	
 	\vspace{5pt}
-	\small{\textit{Tesi di laurea in}}
+	\scshape{Corso di laurea in}
 	\@mastername
 	
 	\setstretch{3}
@@ -136,7 +137,7 @@
 	\vfill
 	\begin{normalsize}
 		\begin{flushleft}
-			\textit{Relatore} \hfill \textit{Candidato}\\
+			\textit{Relatore} \hfill \textit{Laureando}\\
 			\vspace{1pt}
 			Daniele Vogrig \hfill Enrico Lumetti\\
 			Università di Padova \\
@@ -170,6 +171,7 @@ il linguaggio di descrizione dell'hardware VHDL.
 
 \tableofcontents
 \mainmatter
+\pagestyle{plain}
 \include{./TeX_files/chapter_intro}
 \include{./TeX_files/chapter_midi}
 \include{./TeX_files/chapter_nexys}
