@@ -1,4 +1,4 @@
-\DeclarePairedDelimiter\floor{\Big \lfloor}{\Big \rfloor}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
 
 \chapter{Sintesi digitale del segnale}
 \section{Sintesi digitale diretta}
@@ -45,10 +45,10 @@ Si può quindi ricavare la \code{FTW} utilizzando le
 \cref{eq:phase,eq:phasereg}, imponendo:
 \[
 \code{FTW} = \code{F'} - \code{F} = 
-\floor{\frac{2^\code{N}}{2\pi}\phi(t+T_{clk}) - \frac{2^\code{N}}{2\pi}\phi(t)}
-= \floor{2^\code{N} f T_{clk}} = \floor{2^\code{N} \frac{f}{f_{clk}}}
+\floor*{\frac{2^\code{N}}{2\pi}\phi(t+T_{clk}) - \frac{2^\code{N}}{2\pi}\phi(t)}
+= \floor*{2^\code{N} f T_{clk}} = \floor*{2^\code{N} \frac{f}{f_{clk}}}
 \]
-dove $\floor{\cdot}$ indica la parte intera. \\
+dove $\floor*{\cdot}$ indica la parte intera. \\
 La frequenza effettiva $f_{o}$ del segnale risultante dalla DDS è dunque
 \begin{equation}
 \label{eq:actualphase}
@@ -97,7 +97,7 @@ All'indirizzo di memoria $\code{I}$ si trova il campione corrispondente a
 $x(2\pi \frac{\code{I}}{2^\code{M}})$ il cui valore quantizzato $\code{Q}$ a $b$ bit è
 \begin{equation}
 \label{eq:quantization}
-\code{Q} = \floor{2^\code{b} Ax(2\pi \frac{\code{I}}{2^\code{M}})}
+\code{Q} = \floor*{2^\code{b} Ax(2\pi \frac{\code{I}}{2^\code{M}})}
 \end{equation}
 I valori quantizzati vengono rappresentati in notazione binaria in complemento a due,
 permettendo così l'uso dell'aritmetica con segno nella fase di mixing del sintetizzatore.
